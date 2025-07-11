@@ -1,0 +1,384 @@
+
+<!-- last update : 1398/04/03 -->
+<!-- last update : 1398/07/20 moied shahsavari -->
+
+<html>
+<head>
+    <meta http-equiv="Expires" content="now" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta http-equiv="Pragma" content="max-age=480" />
+    <title>انتخاب واحد</title>
+    <link rel="shortcut icon" href="Images/favicon.ico" />
+    <script src="//samacdn.samawork.ir/SamaCDN/Assets/global/plugins/jquery.min.js" type="text/javascript"></script>
+    <link href="Assets/admin/layout/css/themes/darkblue-rtl.css" rel="stylesheet" type="text/css" id="style_color" />
+    
+    <script type="text/javascript">
+        if (window.jQuery == undefined || jQuery.fn.jquery == undefined) {
+
+            document.write('<link href="Assets/global/plugins/fontawesome-pro-5.8.2-web/css/all.min.css" rel="stylesheet" type="text/css" />');
+            document.write('<link href="Assets/global/plugins/simple-line-icons/simple-line-icons.min.css" rel="stylesheet" type="text/css" />');
+            document.write('<link href="Assets/global/plugins/jquery-ui/jquery-ui.css" rel="stylesheet" type="text/css" />');
+            document.write('<link rel="stylesheet" href="Assets/global/plugins/bootstrap/css/bootstrap-rtl.min.css" />');
+            document.write('<link rel="stylesheet" href="Assets/global/plugins/datatables/plugins/bootstrap/dataTables.bootstrap-rtl.css" />');
+            document.write('<link rel="stylesheet" href="Assets/global/css/components-md-rtl.css" />');
+            document.write('<link href="Assets/global/css/plugins-md-rtl.css" rel="stylesheet" type="text/css" />');
+            document.write('<link href="Assets/admin/layout/css/layout-rtl.css" rel="stylesheet" type="text/css" />');
+            document.write('<link href="Assets/admin/layout/css/custom-rtl.css" rel="stylesheet" type="text/css" />');
+            document.write('<link rel="stylesheet" type="text/css" href="Assets/Sama/css/jquery.multiselect.css" />');
+            document.write('<link rel="stylesheet" type="text/css" href="Assets/Sama/css/jquery.multiselect.filter.css" />');
+            document.write('<link rel="stylesheet" type="text/css" href="Style/calendar.css" />');
+            document.write('<link rel="stylesheet" type="text/css" href="Style/timeline.96.08.14.css" />');
+            document.write('<link rel="stylesheet" type="text/css" href="Assets/global/plugins/pace/themes/pace-theme-big-counter-rtl.css" />');
+            document.write('<scr' + 'ipt src="Assets/global/plugins/pace/pace.js" type="text/javascript"><\/scr' + 'ipt>');
+            document.write('<scr'+'ipt src="Assets/global/plugins/jquery.min.js" type="text/javascript"><\/sc'+'ript>');
+            document.write('<scr'+'ipt src="Assets/global/plugins/jquery-ui/jquery-ui.min.js" type="text/javascript"><\/scr'+'ipt>');
+            document.write('<scr'+'ipt src="Assets/global/plugins/jquery.cokie.min.js" type="text/javascript"><\/scr'+'ipt>');
+            document.write('<scr'+'ipt src="Assets/global/plugins/bootstrap/js/bootstrap.min.js" type="text/javascript"><\/scr'+'ipt>');
+            document.write('<scr'+'ipt src="Assets/global/plugins/fontawesome-pro-5.8.2-web/js/all.min.js" type="text/javascript"><\/scr'+'ipt>');
+            document.write('<scr'+'ipt type="text/javascript" src="Assets/Sama/script/jquery.multiselect-2.0.1.js"><\/scr'+'ipt>');
+            document.write('<scr'+'ipt type="text/javascript" src="Assets/Sama/script/jquery.multiselect.filter-2.0.1.js"><\/scr'+'ipt>');
+            document.write('<scr'+'ipt src="Assets/global/plugins/bootstrap-hover-dropdown/bootstrap-hover-dropdown.min.js" type="text/javascript"><\/scr'+'ipt>');
+            document.write('<scr'+'ipt src="Assets/global/plugins/jquery-slimscroll/jquery.slimscroll.min.js" type="text/javascript"><\/scr'+'ipt>');
+            document.write('<scr'+'ipt src="Assets/global/plugins/jquery.blockui.min.js" type="text/javascript"><\/scr'+'ipt>');
+            document.write('<scr'+'ipt src="Assets/global/plugins/jquery.cokie.min.js" type="text/javascript"><\/scr'+'ipt>');
+            document.write('<scr'+'ipt src="Assets/global/plugins/uniform/jquery.uniform.min.js" type="text/javascript"><\/scr'+'ipt>');
+            document.write('<scr'+'ipt src="Assets/global/plugins/bootstrap-switch/js/bootstrap-switch.min.js" type="text/javascript"><\/scr'+'ipt>');
+            document.write('<scr'+'ipt src="Assets/global/plugins/bootstrap-sessiontimeout/jquery.sessionTimeout.min.js" type="text/javascript"><\/scr'+'ipt>');
+            document.write('<scr'+'ipt src="Assets/global/plugins/intro/intro.js" type="text/javascript"><\/scr'+'ipt>');
+            document.write('<scr'+'ipt src="Assets/global/scripts/metronic.js" type="text/javascript"><\/scr'+'ipt>');
+            document.write('<scr'+'ipt src="Assets/admin/layout/scripts/layout.js" type="text/javascript"><\/scr'+'ipt>');
+            document.write('<scr'+'ipt src="Assets/admin/layout/scripts/quick-sidebar.js" type="text/javascript"><\/scr'+'ipt>');
+            document.write('<scr'+'ipt type="text/javascript" src="Scripts/fileinput.js"><\/scr'+'ipt>');
+            document.write('<scr'+'ipt type="text/javascript" src="Scripts/jquery.blockUI.2.70.0.js"><\/scr'+'ipt>');
+            document.write('<scr'+'ipt type="text/javascript" src="Scripts/sahal.js"><\/scr'+'ipt>');
+            document.write('<scr'+'ipt type="text/javascript" src="Scripts/calendar.js"><\/scr'+'ipt>');
+            document.write('<scr'+'ipt type="text/javascript" src="Scripts/serialize.99.03.25.js"><\/scr'+'ipt>');
+            document.write('<scr'+'ipt type="text/javascript" src="Scripts/jquery.noty.packaged.min.js"><\/scr'+'ipt>');
+            document.write('<scr'+'ipt type="text/javascript" src="Scripts/serialize.99.03.25.js"><\/scr'+'ipt>');
+            document.write('<scr'+'ipt type="text/javascript" src="Assets/Sama/script/sama.web.base.99.12.12.js"><\/scr'+'ipt>');
+        }
+        else
+        {
+            document.write('<link href="//samacdn.samawork.ir/SamaCDN/Assets/global/plugins/fontawesome-pro-5.8.2-web/css/all.min.css" rel="stylesheet" type="text/css" />');
+            document.write('<link href="//samacdn.samawork.ir/SamaCDN/Assets/global/plugins/simple-line-icons/simple-line-icons.min.css" rel="stylesheet" type="text/css" />');
+            document.write('<link href="//samacdn.samawork.ir/SamaCDN/Assets/global/plugins/jquery-ui/jquery-ui.css" rel="stylesheet" type="text/css" />');
+            document.write('<link rel="stylesheet" href="//samacdn.samawork.ir/SamaCDN/Assets/global/plugins/bootstrap/css/bootstrap-rtl.min.css" />');
+            document.write('<link rel="stylesheet" href="//samacdn.samawork.ir/SamaCDN/Assets/global/plugins/datatables/plugins/bootstrap/dataTables.bootstrap-rtl.css" />');
+            document.write('<link rel="stylesheet" href="//samacdn.samawork.ir/SamaCDN/Assets/global/css/components-md-rtl.css" />');
+            document.write('<link href="//samacdn.samawork.ir/SamaCDN/Assets/global/css/plugins-md-rtl.css" rel="stylesheet" type="text/css" />');
+            document.write('<link href="//samacdn.samawork.ir/SamaCDN/Assets/admin/layout/css/layout-rtl.css" rel="stylesheet" type="text/css" />');
+            document.write('<link href="//samacdn.samawork.ir/SamaCDN/Assets/admin/layout/css/custom-rtl.css" rel="stylesheet" type="text/css" />');
+            document.write('<link rel="stylesheet" type="text/css" href="//samacdn.samawork.ir/SamaCDN/Assets/Sama/css/jquery.multiselect.css" />');
+            document.write('<link rel="stylesheet" type="text/css" href="//samacdn.samawork.ir/SamaCDN/Assets/Sama/css/jquery.multiselect.filter.css" />');
+            document.write('<link rel="stylesheet" type="text/css" href="//samacdn.samawork.ir/SamaCDN/Style/calendar.css" />');
+            document.write('<link rel="stylesheet" type="text/css" href="//samacdn.samawork.ir/SamaCDN/Style/timeline.96.08.14.css" />');
+            document.write('<link rel="stylesheet" type="text/css" href="//samacdn.samawork.ir/SamaCDN/Assets/global/plugins/pace/themes/pace-theme-big-counter-rtl.css" />');
+            document.write('<scr' + 'ipt src="//samacdn.samawork.ir/SamaCDN/Assets/global/plugins/pace/pace.js" type="text/javascript"><\/scr' + 'ipt>');
+            document.write('<scr'+'ipt src="//samacdn.samawork.ir/SamaCDN/Assets/global/plugins/jquery.min.js" type="text/javascript"><\/scr'+'ipt>');
+            document.write('<scr'+'ipt src="//samacdn.samawork.ir/SamaCDN/Assets/global/plugins/jquery-ui/jquery-ui.min.js" type="text/javascript"><\/scr'+'ipt>');
+            document.write('<scr'+'ipt src="//samacdn.samawork.ir/SamaCDN/Assets/global/plugins/jquery.cokie.min.js" type="text/javascript"><\/scr'+'ipt>');
+            document.write('<scr'+'ipt src="//samacdn.samawork.ir/SamaCDN/Assets/global/plugins/bootstrap/js/bootstrap.min.js" type="text/javascript"><\/scr'+'ipt>');
+            document.write('<scr'+'ipt src="//samacdn.samawork.ir/SamaCDN/Assets/global/plugins/fontawesome-pro-5.8.2-web/js/all.min.js" type="text/javascript"><\/scr'+'ipt>');
+            document.write('<scr'+'ipt type="text/javascript" src="//samacdn.samawork.ir/SamaCDN/Assets/Sama/script/jquery.multiselect-2.0.1.js"><\/scr'+'ipt>');
+            document.write('<scr'+'ipt type="text/javascript" src="//samacdn.samawork.ir/SamaCDN/Assets/Sama/script/jquery.multiselect.filter-2.0.1.js"><\/scr'+'ipt>');
+            document.write('<scr'+'ipt src="//samacdn.samawork.ir/SamaCDN/Assets/global/plugins/bootstrap-hover-dropdown/bootstrap-hover-dropdown.min.js" type="text/javascript"><\/scr'+'ipt>');
+            document.write('<scr'+'ipt src="//samacdn.samawork.ir/SamaCDN/Assets/global/plugins/jquery-slimscroll/jquery.slimscroll.min.js" type="text/javascript"><\/scr'+'ipt>');
+            document.write('<scr'+'ipt src="//samacdn.samawork.ir/SamaCDN/Assets/global/plugins/jquery.blockui.min.js" type="text/javascript"><\/scr'+'ipt>');
+            document.write('<scr'+'ipt src="//samacdn.samawork.ir/SamaCDN/Assets/global/plugins/jquery.cokie.min.js" type="text/javascript"><\/scr'+'ipt>');
+            document.write('<scr'+'ipt src="//samacdn.samawork.ir/SamaCDN/Assets/global/plugins/uniform/jquery.uniform.min.js" type="text/javascript"><\/scr'+'ipt>');
+            document.write('<scr'+'ipt src="//samacdn.samawork.ir/SamaCDN/Assets/global/plugins/bootstrap-switch/js/bootstrap-switch.min.js" type="text/javascript"><\/scr'+'ipt>');
+            document.write('<scr'+'ipt src="//samacdn.samawork.ir/SamaCDN/Assets/global/plugins/bootstrap-sessiontimeout/jquery.sessionTimeout.min.js" type="text/javascript"><\/scr'+'ipt>');
+            document.write('<scr'+'ipt src="//samacdn.samawork.ir/SamaCDN/Assets/global/plugins/intro/intro.js" type="text/javascript"><\/scr'+'ipt>');
+            document.write('<scr'+'ipt src="//samacdn.samawork.ir/SamaCDN/Assets/global/scripts/metronic.js" type="text/javascript"><\/scr'+'ipt>');
+            document.write('<scr'+'ipt src="//samacdn.samawork.ir/SamaCDN/Assets/admin/layout/scripts/layout.js" type="text/javascript"><\/scr'+'ipt>');
+            document.write('<scr'+'ipt src="//samacdn.samawork.ir/SamaCDN/Assets/admin/layout/scripts/quick-sidebar.js" type="text/javascript"><\/scr'+'ipt>');
+            document.write('<scr'+'ipt type="text/javascript" src="//samacdn.samawork.ir/SamaCDN/Scripts/fileinput.js"><\/scr'+'ipt>');
+            document.write('<scr'+'ipt type="text/javascript" src="//samacdn.samawork.ir/SamaCDN/Scripts/jquery.blockUI.2.70.0.js"><\/scr'+'ipt>');
+            document.write('<scr'+'ipt type="text/javascript" src="//samacdn.samawork.ir/SamaCDN/Scripts/sahal.js"><\/scr'+'ipt>');
+            document.write('<scr'+'ipt type="text/javascript" src="//samacdn.samawork.ir/SamaCDN/Scripts/calendar.js"><\/scr'+'ipt>');
+            document.write('<scr'+'ipt type="text/javascript" src="//samacdn.samawork.ir/SamaCDN/Scripts/serialize.99.03.25.js"><\/scr'+'ipt>');
+            document.write('<scr'+'ipt type="text/javascript" src="//samacdn.samawork.ir/SamaCDN/Scripts/jquery.noty.packaged.min.js"><\/scr'+'ipt>');
+            document.write('<scr'+'ipt type="text/javascript" src="//samacdn.samawork.ir/SamaCDN/Scripts/serialize.99.03.25.js"><\/scr'+'ipt>');
+            document.write('<scr'+'ipt type="text/javascript" src="//samacdn.samawork.ir/SamaCDN/Assets/Sama/script/sama.web.base.99.12.12.js"><\/scr'+'ipt>');
+        }
+    </script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            Metronic.init();
+            //dashboards();
+            Layout.init();
+            $.unblockUI();
+        });
+    </script>
+
+</head>
+
+<script type="text/javascript" src="Scripts/unit.selection.99.12.12.js"></script>
+
+<body style="background-color: white;" class="page-md">
+    <div class="page-container" style="background-color: white; margin: 0 5px 0 5px;">
+        <div class="portlet box blue-dark">
+            <div class="portlet-title">
+                <div class="caption">انتخاب واحد (14033) ...</div>
+                <div class="tools">
+                    <a class="collapse" href="javascript:;"></a>
+                </div>
+            </div>
+            <div class="portlet-body">
+
+                
+<form name="frmView" id="frmView" action="StuUnitSelection.asp" method="post">
+    <input type="hidden" name="insView" id="insView">
+    <input type="hidden" name="LessonRegisterStatus" id="LessonRegisterStatus" value="0">
+    <input type="hidden" name="strLessonSelections" id="strLessonSelections">
+    <input type="hidden" name="strGroupSelections" id="strGroupSelections">
+    <input type="hidden" name="strSelectSelections" id="strSelectSelections">
+    <input type="hidden" name="StNo" id="StNo" value="140215365450">
+    <input type="hidden" name="TermCode" id="TermCode" value="14033">
+</form>
+
+<div class="portlet box blue-dark">
+    <div class="portlet-title">
+        <div class="caption">اطلاعات دانشجویی</div>
+        <div class="tools">
+            <a class="collapse" href="javascript:;"></a>
+        </div>
+    </div>
+    <div class="portlet-body">
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <tbody>
+                    <tr>
+                        <td>
+                            <span>شماره دانشجویی :</span></td>
+                        <td>
+                            <span>140215365450</span></td>
+                        <td>
+                            <span>نام خانوادگی و نام :</span></td>
+                        <td>
+                            <span>&#1593;&#1604;&#1610; &#1605;&#1581;&#1605;&#1583;&#1610; - &#1575;&#1605;&#1610;&#1585;&#1581;&#1587;&#1610;&#1606;</span></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span>دانشکده :</span></td>
+                        <td>
+                            <span>&#1605;&#1607;&#1606;&#1583;&#1587;&#1610; &#1576;&#1585;&#1602; &#1608; &#1705;&#1575;&#1605;&#1662;&#1610;&#1608;&#1578;&#1585;</span></td>
+                        <td>
+                            <span>مقطع تحصیلی :</span></td>
+                        <td>
+                            <span>&#1705;&#1575;&#1585;&#1588;&#1606;&#1575;&#1587;&#1610; </span></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span>رشته تحصیلی :</span></td>
+                        <td>
+                            <span>&#1605;&#1607;&#1606;&#1583;&#1587;&#1610; &#1705;&#1575;&#1605;&#1662;&#1610;&#1608;&#1578;&#1585;</span></td>
+                        <td>
+                            <span>نوع دوره :</span></td>
+                        <td>
+                            <span>&#1605;&#1607;&#1605;&#1575;&#1606; &#1606;&#1608;&#1576;&#1578; &#1583;&#1608;&#1605; </span></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span>استاد راهنما :</span></td>
+                        <td>
+                            <span>&#1575;&#1587;&#1578;&#1575;&#1583;&#1605;&#1581;&#1578;&#1585;&#1605; </span></td>
+                        <td>
+                            <span>نیمسال ورود :</span></td>
+                        <td>
+                            <span>14021 </span></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span>وضعیت کلی :</span></td>
+                            <td>
+                                <span>&#1583;&#1585; &#1581;&#1575;&#1604; &#1578;&#1581;&#1589;&#1610;&#1604;</span></td>
+                            <td>
+                                <span>تاریخ :</span></td>
+                            <td>
+                                <span>1404/04/19</span>
+                            </td>
+
+                        </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<script language=javascript>alert('وضعیت درس : [ 8888707 ] :: گروه : [ 1 ] :: پاک شد\n\n')</script>
+<div class="portlet box blue-dark">
+    <div class="portlet-title">
+        <div class="caption">
+            <a style="text-decoration: none;color:white" href="LessonReport.asp" target="_blank">
+                جهت مشاهده دروس ارائه شده نیمسال 14033اینجا کلیک کنید</a>
+        </div>
+        <div class="tools">
+            <a class="collapse" href="javascript:;"></a>
+        </div>
+    </div>
+    <div class="portlet-body">
+
+        <form name="frmSelect" id="frmSelect" action="StuUnitSelection.asp" method="post">
+            <div class="form-group row">
+                <label class="col-md-1">کد درس :</label>
+                <div class="col-md-2">
+                    <input title="کد درس مورد نظر خود برای انتخاب واحد را وارد کنید" name="LessonCode" id="LessonCode" class="form-control" size="15" maxlength="12">
+                </div>
+                <label class="col-md-1">کد گروه :</label>
+                <div class="col-md-2">
+                    <input title="گروهی کد درس مورد نظر شما با آن ارائه شده را برای انتخاب واحد وارد کنید" name="LessonGroup" id="LessonGroup" class="form-control" size="6" maxlength="6">
+                </div>
+                <div class="col-md-6">
+                    <input type="button" title="ثبت موقت درس با گروه مورد نظر" value="اضافه به لیست (ثبت موقت)" onclick="AddSelectLesson()" class="btn btn-success">
+
+                    <input type="button" id='delete-select-lesson' title="حذف انتخاب شما از لیست موقت" value="حذف از لیست موقت" onclick='DeleteSelectLesson();' class="btn btn-danger" disabled>
+                </div>
+            </div>
+        </form>
+
+
+
+
+
+
+        
+                        <div class="portlet box blue-dark">
+                            <div class="portlet-title">
+                                <div class="caption">واحدهای انتخاب شده نیمسال : 14033</div>
+                                <div class="tools">
+                                    <a class="collapse" href="javascript:;"></a>
+                                </div>
+                            </div>
+                            <div class="portlet-body">
+                                <div class="form-group">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered">
+                                            <thead>
+                                                <tr>
+                                                    <th>ردیف</th>
+                                                    <th>کد درس</th>
+                                                    <th>نام درس</th>
+                                                    <th>کد گروه</th>
+                                                    <th>واحد</th>
+                                                    <th>برنامه هفتگی</th>
+                                                    <th>تاریخ امتحان</th>
+                                                    <th>وضعیت</th>
+                                                    <th>شهریه</th><th>پاک کنم ؟</th>
+                                                    </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>1</td>
+                                                    <TD><span>3030513</span></td>
+                                                    <td><span>&#1605;&#1593;&#1575;&#1583;&#1604;&#1575;&#1578; &#1583;&#1610;&#1601;&#1585;&#1575;&#1606;&#1587;&#1610;&#1604;(&#1578;)</span></td>
+                                                    <TD><span title='کد گروه که درس با آن ارائه شده است'><b>1</b></span></td>
+                                                    <td><span>3</span></td>
+                                                    <td><span>(&#1583;14:0&#1578;&#1575;19:0)(&#1587;14:0&#1578;&#1575;19:0)</span></td>
+                                                    <td><span>1404/05/29</span></td>
+                                                    <td><span>انتخاب واحد</span></td>
+                                                    <TD ><span>15000000<TD><input title='پاک کردن درس از انتخاب واحد' type='checkbox' onclick='RemoveSelectClick(this)'><input type=hidden name='LessonCode' value=3030513><input type=hidden name='LessonGroup' value=1></td>
+                                                </tr>
+                                                <tr>
+                                                    
+                                                    <td colspan="11">
+                                                        
+                                                                <span>جمع واحد انتخابی نیمسال :</span>
+                                                                <span class="text-danger"><b>3 </b></span>
+                                                            </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+
+                                
+                                <div class="form-group row">
+                                    <div class="col-md-10   text-danger">
+                                        <h4 class="text-left">از لیست فوق به دلخواه درس مورد نظر را برای پاک کردن انتخاب نموده و دستور زیر را انجام دهید</h4>
+                                    </div>
+                                    <div class="col-md-2 ">
+
+
+
+                                        <input type=button Value='پاک کردن دروس انتخابی' class='btn btn-danger float-left' id='student-lesson-remove' onclick='StudentLessonRemove();' disabled=''  />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        
+
+                            <br/>
+                            <div class="portlet box blue-dark">
+                                <div class="portlet-title">
+                                    <div class="caption">شهریه نیمسال : 14033</div>
+                                    <div class="tools">
+                                        <a class="collapse" href="javascript:;"></a>
+                                    </div>
+                                </div>
+                                <div class="portlet-body">
+
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered">
+                                            <thead>
+
+                                                <tr>
+                                                    <th>شهریه ثابت</th>
+                                                    <th>شهریه متغییر و سایر مبالغ آموزشی</th>
+                                                    <th>تخفیفات مبلغی</th>
+                                                    <th>تخفیفات شهریه ثابت</th>
+                                                    <th>تخفیفات شهریه متغییر</th>
+                                                    <th>مجموع پرداختی</th>
+                                                    <th>مانده نیمسال</th>
+                                                    <th>مانده کل</th>
+                                                    <th>قابل پرداخت</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    
+                                                    <td>
+                                                        <span><b>0</b></span></td>
+                                                    
+                                                    <td>
+                                                        <span><b>15000000</b></span></td>
+                                                    
+                                                    <td>
+                                                        <span><b>0</b></span></td>
+                                                    
+                                                    <td>
+                                                        <span><b>0</b></span></td>
+                                                    
+                                                    <td>
+                                                        <span><b>0</b></span></td>
+                                                    
+                                                    <td>
+                                                        <span><b>0</b></span></td>
+                                                    
+                                                    <td>
+                                                        <span><b>-15000000</b></span></td>
+                                                    <td>
+                                                        
+                                                        <span><b>-84937776</b></span>
+                                                        
+                                                    </td>
+                                                    <td>
+                                                        <span><b>84937776</b></span></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
