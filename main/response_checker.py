@@ -17,12 +17,12 @@ def analyze_response(html: str, operation: str, course_code: str = None, group_c
             if "پاک شد" in alert:
                 return {
                     "status_code": "deleted",
-                    "message": "✅ درس انتخابی حذف شد."
+                    "message": f"✅ درس {course_code} با گروه {group_code} حذف شد."
                 }
             elif "درس مورد نظر پیدا نشد" in alert:
                 return {
                     "status_code": "not_found",
-                    "message": "⚠️ درس مورد نظر برای حذف پیدا نشد."
+                    "message": f"⚠❌ درس {course_code} با گروه {group_code} برای حذف پیدا نشد."
                 }
         return {
             "status_code": "unknown_delete",
@@ -41,16 +41,16 @@ def analyze_response(html: str, operation: str, course_code: str = None, group_c
                     if len(cols) >= 9:
                         status = cols[8].get_text(strip=True)
 
-                        if "ثبت شد" in status:
+                        if "ظرفیت درس تکمیل شده است" in status:
                             return {
-                                "status_code": "registered",
-                                "message": "✅ ثبت نهایی درس در جدول وضعیت تایید شد."
+                                "status_code": "capacity_full",
+                                "message": f"⚠️ درخواست درس {course_code} با گروه {group_code} ارسال شده ولی ظرفیت پر است."
                             }
 
                         elif "برنامه هفتگی تداخل دارد" in status:
                             return {
                                 "status_code": "conflict",
-                                "message": f"❌ درخواست درس {course_code} با گروه {group_code} به دلیل تداخل برنامه هفتگی رد شد."
+                                "message": f"❌ درس {course_code} با گروه {group_code} به دلیل تداخل برنامه هفتگی رد شد."
                             }
 
                         elif "درس برای دانشجو قبلاً ثبت شده است" in status:
@@ -65,10 +65,10 @@ def analyze_response(html: str, operation: str, course_code: str = None, group_c
                                 "message": f"❌ انتخاب درس {course_code} با گروه {group_code} ممکن نیست، چون تعداد واحدها از حد مجاز بیشتر شده است."
                             }
 
-                        elif "ظرفیت درس تکمیل شده است" in status:
+                        elif "ثبت شد" in status:
                             return {
-                                "status_code": "capacity_full",
-                                "message": f"⚠️ درخواست درس {course_code} با گروه {group_code} ارسال شده ولی ظرفیت پر است یا در حال بررسی توسط آموزش است."
+                                "status_code": "registered",
+                                "message": f"✅ درس {course_code} با گروه {group_code} برای شما انتخاب شد."
                             }
 
         return {

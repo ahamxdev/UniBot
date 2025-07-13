@@ -3,6 +3,7 @@ from response_checker import analyze_response
 from network_module import create_session, send_course_request
 from logic_module import is_done
 from extract_data import extract_data
+from extract_response import save_response
 
 
 
@@ -93,6 +94,8 @@ def main():
                             print(f"{i}. 🧾 {course['کد درس']} - {course['نام درس']} | گروه: {course['کد گروه']} | واحد: {course['واحد']} | امتحان: {course['تاریخ امتحان']} | شهریه: {course['شهریه']}")
                     else:
                         print("⚠️ هیچ درسی انتخاب نشده است.")
+
+                    save_response(result["status_code"], html)
 
                 else:
                     print(student_info["message"])
