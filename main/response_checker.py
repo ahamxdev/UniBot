@@ -2,8 +2,6 @@ import re
 from bs4 import BeautifulSoup
 
 
-
-
 def extract_alerts(html: str):
     return re.findall(r"alert\('([^']+)'\)", html)
 
@@ -75,8 +73,3 @@ def analyze_response(html: str, operation: str, course_code: str = None, group_c
             "status_code": "not_registered",
             "message": "⚠️ ثبت نهایی انجام نشد و درس در لیست انتخاب واحد موجود نیست."
         }
-
-    return {
-        "status_code": "unknown",
-        "message": "⚠️ عملیات یا پاسخ ناشناخته است."
-    }

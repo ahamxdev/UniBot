@@ -1,22 +1,21 @@
 import time
+import threading
+import traceback
 from response_checker import analyze_response
-from network_module import create_session, send_course_request
+from network_module import create_session, send_course_request, send_keep_alive_ping
 from logic_module import is_done
 from extract_data import extract_data
 from extract_response import save_response
 
 
+def keep_session_alive_loop(session):
+    time.sleep(5 * 60)
+    while True:
+        send_keep_alive_ping(session)
+        time.sleep(14 * 60)
 
 
-def main():
-    print("🔹 Auto Unit Selection Bot Started")
-
-    stno = input("Enter your Student Number (StNo): ").strip()
-    term_code = input("Enter Term Code (e.g., 14033): ").strip()
-    raw_cookie = input("\nPaste your full Cookie header from browser (one line):\n").strip()
-
-    session = create_session(raw_cookie)
-
+def get_course_list():
     course_list = []
 
     while True:
@@ -50,6 +49,27 @@ def main():
         if another != 'y':
             break
 
+    return course_list
+
+
+def main():
+    print("🔹 Auto Unit Selection Bot Started")
+
+    # 🧾 Get inputs
+    stno = input("Enter your Student Number (StNo): ").strip()
+    term_code = input("Enter Term Code (e.g., 14033): ").strip()
+    raw_cookie = input("\nPaste your full Cookie header from browser (one line):\n").strip()
+
+    # 🧾 Create session with headers and cookies
+    session = create_session(raw_cookie)
+
+    # 🧾 Get courses
+    course_list = get_course_list()
+
+    # 🚀 Start keep-alive thread after inputs are done
+    threading.Thread(target=keep_session_alive_loop, args=(session,), daemon=True).start()
+    print("\n🛟 Keep-alive thread started.\n")
+
     print("\n🔄 Starting submission loop...\n")
     round_num = 1
 
@@ -62,7 +82,6 @@ def main():
                 continue
 
             all_done = False
-
             try:
                 print(f"\n⏳ Sending request for course {item['course']} - group {item['group']}...")
                 response = send_course_request(
@@ -95,12 +114,15 @@ def main():
                     else:
                         print("⚠️ هیچ درسی انتخاب نشده است.")
 
-                    save_response(result["status_code"], html)
-
                 else:
                     print(student_info["message"])
 
+                # Save response only if result is a dictionary with status_code
+                # if isinstance(result, dict) and "status_code" in result:
+                #     save_response(result["status_code"], html)
+
             except Exception as e:
+                print(traceback.format_exc())
                 print(f"❌ Error while sending request for course {item['course']}: {str(e)}")
 
         if all_done:
@@ -110,6 +132,7 @@ def main():
         round_num += 1
         print("\n⏱ Waiting 5 seconds before next round...\n")
         time.sleep(5)
+
 
 if __name__ == "__main__":
     main()
