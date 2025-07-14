@@ -12,7 +12,7 @@ from db.save_to_db import save_student_info
 def keep_session_alive_loop(session):
     print("\n🛟 Keep-alive thread started.\n")
     while True:
-        time.sleep(1 * 60)
+        time.sleep(5 * 60)
         send_keep_alive_ping(session)
 
 
