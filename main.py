@@ -10,11 +10,10 @@ from db.save_to_db import save_student_info
 
 
 def keep_session_alive_loop(session):
-    time.sleep(5 * 60)
+    print("\n🛟 Keep-alive thread started.\n")
     while True:
-        print("\n🛟 Keep-alive thread started.\n")
+        time.sleep(1 * 60)
         send_keep_alive_ping(session)
-        time.sleep(14 * 60)
 
 
 def get_course_list():
