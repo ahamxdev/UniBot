@@ -1,4 +1,5 @@
 def is_done(status_code: str, operation: str) -> bool:
+
     """
     Determine whether the current operation has completed successfully
     and no further requests are necessary.
@@ -17,6 +18,7 @@ def is_done(status_code: str, operation: str) -> bool:
             - True if the operation is complete (no more requests needed).  
             - False if further attempts should continue.
     """
+
     if operation == "register":
         # If the course has been fully registered, stop retrying
         if status_code in ["registered", "already_registered", "conflict", "unit_limit_exceeded"]:

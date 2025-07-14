@@ -1,18 +1,32 @@
+import re
 from bs4 import BeautifulSoup
 
+
 def extract_data(html: str):
+
+    """
+    Parses the given HTML and extracts student information and selected courses.
+    
+    Returns a dictionary with:
+    - 'student_info': Persian-keyed student info (for display)
+    - 'db_student_info': English-keyed student info (for database)
+    - 'selected_courses': Persian-keyed course list (for display)
+    - 'db_selected_courses': English-keyed course list (for database)
+    """
+
     soup = BeautifulSoup(html, 'html.parser')
     result = {}
 
-    # استخراج اطلاعات دانشجویی
+    # Find and extract student info table
     student_info_title = soup.find('div', class_='caption', string=lambda t: t and "اطلاعات دانشجویی" in t)
     if not student_info_title:
-        return {"status": "not_found", "message": "ℹ️ اطلاعات دانشجویی یافت نشد."}
+        return {"status": "not_found", "message": "ℹ️ Student info not found."}
 
     table = student_info_title.find_parent("div", class_="portlet").find("table")
     if not table:
-        return {"status": "not_found", "message": "ℹ️ جدول اطلاعات دانشجویی یافت نشد."}
+        return {"status": "not_found", "message": "ℹ️ Student info table not found."}
 
+    # Extract key-value pairs from student info table (Persian keys)
     rows = table.find_all("tr")
     for row in rows:
         cols = row.find_all("td")
@@ -22,7 +36,7 @@ def extract_data(html: str):
                 value = cols[i+1].get_text(strip=True)
                 result[key] = value
 
-    # استخراج لیست دروس انتخابی
+    # Extract selected courses (Persian keys for display)
     selected_courses = []
     course_table_caption = soup.find('div', class_='caption', string=lambda t: t and "واحدهای انتخاب شده نیمسال" in t)
     if course_table_caption:
@@ -45,8 +59,58 @@ def extract_data(html: str):
                     }
                     selected_courses.append(course)
 
+    # Mapping Persian keys to English keys for student info
+    key_map_student = {
+        "شماره دانشجویی": "student_number",
+        "نام خانوادگی و نام": "full_name",
+        "دانشکده": "faculty",
+        "مقطع تحصیلی": "degree",
+        "رشته تحصیلی": "major",
+        "نوع دوره": "course_type",
+        "استاد راهنما": "advisor",
+        "نیمسال ورود": "entry_term",
+        "وضعیت کلی": "status",
+        "تاریخ": "date"
+    }
+
+    # Mapping Persian keys to English keys for courses
+    key_map_courses = {
+        "ردیف": "row",
+        "نام درس": "course_name",
+        "کد درس": "course_code",
+        "کد گروه": "group_code",
+        "واحد": "unit",
+        "برنامه هفتگی": "weekly_schedule",
+        "تاریخ امتحان": "exam_date",
+        "وضعیت": "status",
+        "شهریه": "tuition"
+    }
+
+    def normalize_key(key):
+        """Remove all whitespace from keys (useful for fuzzy matching)"""
+        return re.sub(r"\s+", "", key)
+
+    # Normalize keys for accurate lookup
+    normalized_result = {normalize_key(k): v for k, v in result.items()}
+    db_result = {}
+
+    # Convert Persian keys to English using normalized keys
+    for farsi_key, english_key in key_map_student.items():
+        norm_key = normalize_key(farsi_key)
+        db_result[english_key] = normalized_result.get(norm_key, None)
+
+    # Convert selected courses to English-keyed dictionaries
+    db_selected_courses = []
+    for course in selected_courses:
+        db_course = {}
+        for farsi_key, english_key in key_map_courses.items():
+            db_course[english_key] = course.get(farsi_key, None)
+        db_selected_courses.append(db_course)
+
     return {
         "status": "ok",
-        "data": result,
-        "selected_courses": selected_courses
+        "student_info": result,                  # Persian keys for UI display
+        "db_student_info": db_result,            # English keys for DB insertion
+        "selected_courses": selected_courses,    # Persian keys for UI display
+        "db_selected_courses": db_selected_courses  # English keys for DB insertion
     }

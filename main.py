@@ -1,16 +1,18 @@
 import time
 import threading
 import traceback
-from response_checker import analyze_response
-from network_module import create_session, send_course_request, send_keep_alive_ping
-from logic_module import is_done
-from extract_data import extract_data
-from extract_response import save_response
+from main.response_checker import analyze_response
+from main.network_module import create_session, send_course_request, send_keep_alive_ping
+from main.logic_module import is_done
+from main.extract_data import extract_data
+from main.save_response import save_response
+from db.save_to_db import save_student_info
 
 
 def keep_session_alive_loop(session):
     time.sleep(5 * 60)
     while True:
+        print("\n🛟 Keep-alive thread started.\n")
         send_keep_alive_ping(session)
         time.sleep(14 * 60)
 
@@ -56,8 +58,10 @@ def main():
     print("🔹 Auto Unit Selection Bot Started")
 
     # 🧾 Get inputs
-    stno = input("Enter your Student Number (StNo): ").strip()
-    term_code = input("Enter Term Code (e.g., 14033): ").strip()
+    # stno = input("Enter your Student Number (StNo): ").strip()
+    # term_code = input("Enter Term Code (e.g., 14033): ").strip()
+    stno = 140215365450
+    term_code = 14033
     raw_cookie = input("\nPaste your full Cookie header from browser (one line):\n").strip()
 
     # 🧾 Create session with headers and cookies
@@ -68,10 +72,11 @@ def main():
 
     # 🚀 Start keep-alive thread after inputs are done
     threading.Thread(target=keep_session_alive_loop, args=(session,), daemon=True).start()
-    print("\n🛟 Keep-alive thread started.\n")
 
     print("\n🔄 Starting submission loop...\n")
     round_num = 1
+
+    student_info_printed = False
 
     while True:
         print(f"\n📘 Round {round_num}")
@@ -96,26 +101,35 @@ def main():
                 html = response.content.decode('utf-8', errors='ignore')
 
                 result = analyze_response(html, item["operation"], course_code=item["course"], group_code=item["group"])
-                print(f"📄 Result: {result['message']}")
-
-                if is_done(result["status_code"], item["operation"]):
-                    item["done"] = True
+                print(f"\n📄 Result: {result['message']}")
 
                 student_info = extract_data(html)
                 if student_info["status"] == "ok":
-                    print("\nℹ️ اطلاعات دانشجویی:")
-                    for k, v in student_info["data"].items():
-                        print(f"📌 {k}: {v}")
+                    if not student_info_printed:
+                        save_student_info(student_info["db_student_info"])
+                        # print("🧪 db_student_info:", student_info["db_student_info"])
+                        # print("\nℹ️ اطلاعات دانشجویی:")
+                        # for k, v in student_info["student_info"].items():
+                        #     print(f"📌 {k}: {v}")
+                        student_info_printed = True
 
-                    print("\n📚 لیست دروس انتخاب‌شده:")
-                    if student_info["selected_courses"]:
-                        for i, course in enumerate(student_info["selected_courses"], start=1):
-                            print(f"{i}. 🧾 {course['کد درس']} - {course['نام درس']} | گروه: {course['کد گروه']} | واحد: {course['واحد']} | امتحان: {course['تاریخ امتحان']} | شهریه: {course['شهریه']}")
-                    else:
-                        print("⚠️ هیچ درسی انتخاب نشده است.")
+                    # save_selected_courses(student_info["db_student_info"], student_info["db_selected_courses"])
+                    # print("🧾 db_selected_courses:", student_info["db_selected_courses"])
+
+                    if not result["status_code"] == "capacity_full":
+                        print("\n📚 لیست دروس انتخاب شده:")
+                        selected_courses = student_info.get("selected_courses", [])
+                        if selected_courses:
+                            for i, course in enumerate(selected_courses, start=1):
+                                print(f"{i}. {course['نام درس']} | {course['کد درس']} | گروه: {course['کد گروه']} | واحد: {course['واحد']} | امتحان: {course['تاریخ امتحان']} | شهریه: {course['شهریه']}")
+                        else:
+                            print("⚠️ هیچ درسی انتخاب نشده است.")
 
                 else:
                     print(student_info["message"])
+
+                if is_done(result["status_code"], item["operation"]):
+                    item["done"] = True
 
                 # Save response only if result is a dictionary with status_code
                 # if isinstance(result, dict) and "status_code" in result:
@@ -130,7 +144,7 @@ def main():
             break
 
         round_num += 1
-        print("\n⏱ Waiting 5 seconds before next round...\n")
+        print("\n⏱ Waiting 5 seconds before next round...")
         time.sleep(5)
 
 

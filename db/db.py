@@ -1,0 +1,50 @@
+import os
+from dotenv import load_dotenv
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+from urllib.parse import quote_plus
+
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Database configuration from environment or defaults
+DB_USER = os.getenv("DB_USER", "unibot_user")
+DB_PASS = os.getenv("DB_PASS", "UnibotDBUser-13579@qetUO")
+DB_NAME = os.getenv("DB_NAME", "unibot")
+DB_HOST = os.getenv("DB_HOST", "localhost")
+DB_PORT = os.getenv("DB_PORT", "5432")
+
+# URL-encode password to safely include in connection string
+DB_PASS_ENCODED = quote_plus(DB_PASS)
+
+# Construct the PostgreSQL connection string
+DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASS_ENCODED}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+
+# Create a SQLAlchemy engine for connecting to the database
+engine = create_engine(
+    DATABASE_URL,
+    echo=False,       # Set to True to log SQL queries for debugging
+    future=True       # Enables use of SQLAlchemy 2.0-style API
+)
+
+# Create a session factory for interacting with the database
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine,
+    future=True
+)
+
+# Base class for all ORM models
+Base = declarative_base()
+Base.metadata.drop_all(bind=engine)
+
+def init_db():
+    """
+    Initializes the database by creating all tables 
+    defined in models if they do not already exist.
+    """
+    Base.metadata.create_all(bind=engine)
+    # Base.metadata.drop_all(bind=engine)

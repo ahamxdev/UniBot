@@ -3,6 +3,17 @@ from http.cookies import SimpleCookie
 
 
 def update_cookies_from_response(session: requests.Session, response: requests.Response):
+
+    """
+    Update session cookies based on 'Set-Cookie' headers in the HTTP response.
+
+    Args:
+        session (requests.Session): The session to update.
+        response (requests.Response): The HTTP response containing cookies.
+
+    This handles both single and multiple 'Set-Cookie' headers.
+    """
+
     cookie_headers = response.headers.getlist('Set-Cookie') if hasattr(response.headers, 'getlist') else response.headers.get('Set-Cookie')
     if not cookie_headers:
         return
@@ -30,9 +41,17 @@ def update_cookies_from_response(session: requests.Session, response: requests.R
 
 
 def create_session(raw_cookie: str) -> requests.Session:
+
     """
-    Create and return a requests session with given raw cookie string and default headers.
+    Create a pre-configured requests.Session with default headers and given cookie.
+
+    Args:
+        raw_cookie (str): Raw cookie string copied from browser.
+
+    Returns:
+        requests.Session: A session with headers and cookies set for the university site.
     """
+
     session = requests.Session()
 
     # Parse raw cookie
@@ -65,9 +84,16 @@ def create_session(raw_cookie: str) -> requests.Session:
 
 
 def send_keep_alive_ping(session: requests.Session):
+
     """
-    Send POST + GET request to keep session alive.
+    Send a POST (and optionally GET) request to keep the session alive.
+
+    Args:
+        session (requests.Session): Active session object with cookies and headers.
+
+    Helps prevent session expiration by periodically pinging the server.
     """
+
     post_url = "https://amozesh.tabrizu.ac.ir/samaweb/keep-alive.aspx"
     get_url = "https://amozesh.tabrizu.ac.ir/SamaWeb/Login.aspx?ReturnUrl=%2fsamaweb%2fkeep-alive.aspx"
 
@@ -96,9 +122,25 @@ def send_keep_alive_ping(session: requests.Session):
 
 def send_course_request(session: requests.Session, ins_view: str, course: str, group: str,
                         stno: str, term_code: str) -> requests.Response:
+
     """
-    Send a course registration or deletion request to the education system.
+    Send a course registration or deletion request.
+
+    Args:
+        session (requests.Session): The authenticated session.
+        ins_view (str): View type ('4' = register, '5' = delete).
+        course (str): Course code.
+        group (str): Group number.
+        stno (str): Student number.
+        term_code (str): Term code (e.g. '14022').
+
+    Returns:
+        requests.Response: Server response after submission.
+
+    Raises:
+        requests.RequestException: If the request fails.
     """
+
     url = "https://amozesh.tabrizu.ac.ir/samaweb/StuUnitSelection.asp"
 
     data = {

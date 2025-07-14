@@ -3,10 +3,35 @@ from bs4 import BeautifulSoup
 
 
 def extract_alerts(html: str):
+
+    """
+    Extract JavaScript alert messages from the HTML.
+
+    Args:
+        html (str): The HTML content containing alert scripts.
+
+    Returns:
+        list[str]: List of alert message strings.
+    """
+
     return re.findall(r"alert\('([^']+)'\)", html)
 
 
 def analyze_response(html: str, operation: str, course_code: str = None, group_code: str = None):
+
+    """
+    Analyze the HTML response to determine the outcome of a course registration or deletion.
+
+    Args:
+        html (str): Raw HTML response from the server.
+        operation (str): Either 'register' or 'delete'.
+        course_code (str, optional): Course code for reference.
+        group_code (str, optional): Group code for reference.
+
+    Returns:
+        dict: Contains 'status_code' and a human-readable 'message'.
+    """
+
     soup = BeautifulSoup(html, 'html.parser')
     alerts = extract_alerts(html)
 
@@ -32,6 +57,7 @@ def analyze_response(html: str, operation: str, course_code: str = None, group_c
         if target_caption:
             portlet_body = target_caption.find_parent("div", class_="portlet").find("div", class_="portlet-body")
             table = portlet_body.find("table") if portlet_body else None
+
             if table:
                 rows = table.find_all("tr")
                 for row in rows:
