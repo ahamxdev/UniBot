@@ -6,7 +6,6 @@ from telegram.ext import (
 
 from config import TOKEN, ADMIN_CHAT_ID
 
-
 def main_menu_keyboard():
     return ReplyKeyboardMarkup(
         keyboard=[
@@ -48,14 +47,10 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif data.startswith("term_"):
         selected_term = data.replace("term_", "")
-        await context.bot.send_message(
-            chat_id=chat_id,
-            text=f"✅ ترم {selected_term} انتخاب شد."
-        )
         student_code = context.user_data.get("student_code", "نامشخص")
         await context.bot.send_message(
             chat_id=chat_id,
-            text=f"✅ اطلاعات شما ثبت شد:\nکد دانشجویی: {student_code}\nترم: {selected_term}\n\n🏠 به منوی اصلی برگشتی.",
+            text=f"✅ ترم {selected_term} انتخاب شد.\n\n📌 اطلاعات شما:\nکد دانشجویی: {student_code}\nترم: {selected_term}\n\n🏠 به منوی اصلی برگشتی.",
             reply_markup=main_menu_keyboard()
         )
         context.user_data.clear()
@@ -72,11 +67,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif data == "back_home":
         context.user_data.clear()
-        await context.bot.send_message(
-            chat_id=chat_id,
-            text="🏠 برگشتی به خانه.",
-            reply_markup=main_menu_keyboard()
-        )
+        await context.bot.send_message(chat_id=chat_id, text="🏠 برگشتی به خانه.", reply_markup=main_menu_keyboard())
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.message.from_user
@@ -104,6 +95,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if text == "🏠 بازگشت به خانه":
             context.user_data.clear()
             await update.message.reply_text("🏠 برگشتی به خانه.", reply_markup=main_menu_keyboard())
+            return
+
+        if not text.isdigit():
+            await update.message.reply_text("⚠️ لطفاً فقط عدد وارد کن. کد دانشجویی باید عدد باشد.")
             return
 
         context.user_data["student_code"] = text
