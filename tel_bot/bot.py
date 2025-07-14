@@ -65,6 +65,20 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         context.user_data.clear()
         await context.bot.send_message(chat_id=chat_id, text="🏠 به منوی اصلی برگشتی.", reply_markup=main_menu_keyboard())
 
+    elif data == "pay_subscription":
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text="💳 در حال انتقال به زرین‌پال...\nhttps://zarinpal.com/pg/"
+        )
+
+    elif data == "apply_discount":
+        context.user_data["awaiting_discount_code"] = True
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text="🏷️ لطفاً کد تخفیف خود را وارد کن:",
+            reply_markup=back_home_keyboard()
+        )
+
     elif data == "back_home":
         context.user_data.clear()
         await context.bot.send_message(chat_id=chat_id, text="🏠 برگشتی به خانه.", reply_markup=main_menu_keyboard())
@@ -90,6 +104,19 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         feedback = f"📩 انتقاد جدید از {username}:\n\n\"{text}\""
         await context.bot.send_message(chat_id=ADMIN_CHAT_ID, text=feedback)
         return
+
+    if context.user_data.get("in_payment_menu"):
+        if text == "💰 پرداخت اشتراک":
+            await update.message.reply_text("💳 در حال انتقال به زرین‌پال...\nhttps://zarinpal.com/pg/",
+              reply_markup=main_menu_keyboard())
+            context.user_data.clear()
+            return
+
+        elif text == "🏷️ اعمال کد تخفیف":
+            context.user_data["awaiting_discount_code"] = True
+            context.user_data["in_payment_menu"] = False
+            await update.message.reply_text("🏷️ لطفاً کد تخفیف خود را وارد کن:", reply_markup=back_home_keyboard())
+            return
 
     if context.user_data.get("awaiting_student_code"):
         if text == "🏠 بازگشت به خانه":
@@ -165,7 +192,20 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     if text == "💳 پرداخت":
-        await update.message.reply_text("💳 در حال انتقال به زرین‌پال...\nhttps://zarinpal.com/pg/")
+        context.user_data["in_payment_menu"] = True
+        keyboard = ReplyKeyboardMarkup(
+            keyboard=[
+                ["💰 پرداخت اشتراک"],
+                ["🏷️ اعمال کد تخفیف"],
+                ["🏠 بازگشت به خانه"]
+            ],
+            resize_keyboard=True
+        )
+        await update.message.reply_text(
+            "💳 لطفاً یکی از گزینه‌های زیر را انتخاب کن:",
+            reply_markup=keyboard
+        )
+        return
 
     elif text == "💬 انتقادات":
         context.user_data["feedback_mode"] = True
@@ -187,5 +227,5 @@ if __name__ == "__main__":
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(button_handler))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-    print("🤖 ربات روشنه!")
+    print("🤖 The robot is on!")
     app.run_polling()
