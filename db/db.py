@@ -9,10 +9,11 @@ from urllib.parse import quote_plus
 # Load environment variables from .env file
 load_dotenv()
 
+
 # Database configuration from environment or defaults
 DB_USER = os.getenv("DB_USER", "unibot_user")
-DB_PASS = os.getenv("DB_PASS", "UnibotDBUser-13579@qetUO")
-DB_NAME = os.getenv("DB_NAME", "unibot")
+DB_PASS = os.getenv("DB_PASS", "UniBotDBUser-13579@qetUO")
+DB_NAME = os.getenv("DB_NAME", "unibot_db")
 DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_PORT = os.getenv("DB_PORT", "5432")
 

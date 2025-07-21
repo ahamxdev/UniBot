@@ -1,35 +1,42 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey, Enum
 from sqlalchemy.orm import relationship
 from db.db import Base
+import enum
+
+
+
+class PaymentStatusEnum(enum.Enum):
+    not_paid = "not_paid"
+    paid = "paid"
+    paid_with_discount = "paid_with_discount"
+
 
 
 class StudentInfo(Base):
-
     """
     ORM model for the 'students_info' table.
     Stores personal and academic information about a student.
     """
-
     __tablename__ = "students_info"
 
-    id = Column(Integer, primary_key=True, index=True)
-    student_number = Column(String, unique=True, index=True, nullable=False)  # Unique student ID
-    full_name = Column(String)         # Full name (last name + first name)
-    faculty = Column(String)           # Faculty or department
-    degree = Column(String)            # Degree level (e.g., Bachelor's)
-    major = Column(String)             # Major or field of study
-    course_type = Column(String)       # Type of program (e.g., Guest)
-    advisor = Column(String)           # Advisor name
-    entry_term = Column(String)        # Entry term (e.g., 14021)
-    status = Column(String)            # Status (e.g., Active)
-    date = Column(String)              # Date of data retrieval or registration
+    student_id = Column(Integer, ForeignKey("students_status.id"), primary_key=True, index=True)
+    student_number = Column(String, unique=True, index=True, nullable=False)
+    full_name = Column(String)
+    faculty = Column(String)
+    degree = Column(String)
+    major = Column(String)
+    course_type = Column(String)
+    advisor = Column(String)
+    entry_term = Column(String)
+    status = Column(String)
+    date = Column(String)
 
-    # Relationship to selected courses
-    # courses = relationship(
-    #     "SelectedCourse",
-    #     back_populates="student",
-    #     cascade="all, delete-orphan"
-    # )
+    # ارتباط یک‌به‌یک با StudentStatus
+    status_info = relationship(
+        "StudentStatus",
+        back_populates="student",
+        uselist=False,
+    )
 
 
 
@@ -55,3 +62,26 @@ class StudentInfo(Base):
 
 #     # Relationship back to student
 #     student = relationship("StudentInfo", back_populates="courses")
+
+
+
+class StudentStatus(Base):
+    """
+    ORM model for the 'students_status' table.
+    Stores payment and metadata about student actions.
+    """
+    __tablename__ = "students_status"
+
+    row_index = Column(Integer, nullable=True)
+    id = Column(Integer, primary_key=True, index=True)
+    telegram_user_id = Column(String, unique=True, index=True, nullable=True)
+    student_number = Column(String, nullable=False)
+    payment_status = Column(Enum(PaymentStatusEnum), nullable=False, default=PaymentStatusEnum.not_paid)
+    discount_code = Column(String, nullable=True)
+
+    # ارتباط یک‌به‌یک با StudentInfo
+    student = relationship(
+        "StudentInfo",
+        back_populates="status_info",
+        uselist=False
+    )

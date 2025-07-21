@@ -45,7 +45,7 @@ def analyze_response(html: str, operation: str, course_code: str = None, group_c
             elif "درس مورد نظر پیدا نشد" in alert:
                 return {
                     "status_code": "not_found",
-                    "message": f"⚠❌ درس {course_code} با گروه {group_code} برای حذف پیدا نشد."
+                    "message": f"❌ درس {course_code} با گروه {group_code} برای حذف پیدا نشد."
                 }
         return {
             "status_code": "unknown_delete",
