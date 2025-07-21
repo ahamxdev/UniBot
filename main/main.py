@@ -82,6 +82,10 @@ def main(stno, term_code, raw_cookie, course_list):
                 if is_done(result["status_code"], item["operation"]):
                     item["done"] = True
 
+                # Save response only if result is a dictionary with status_code
+                # if isinstance(result, dict) and "status_code" in result:
+                #     save_response(result["status_code"], html)
+
             except Exception as e:
                 print(traceback.format_exc())
                 print(f"❌ Error while sending request for course {item['course']}: {str(e)}")
