@@ -16,58 +16,10 @@ def keep_session_alive_loop(session):
         send_keep_alive_ping(session)
 
 
-# def get_course_list():
-#     course_list = []
-
-#     while True:
-#         course = input("\n➕ Enter course code: ").strip()
-#         group = input("➕ Enter group code: ").strip()
-
-#         print("➕ Select operation for this course:")
-#         print("1. Final Register")
-#         print("2. Delete Course")
-#         op = input("Enter 1 or 2: ").strip()
-
-#         if op == "1":
-#             ins_view = "4"
-#             operation = "register"
-#         elif op == "2":
-#             ins_view = "5"
-#             operation = "delete"
-#         else:
-#             print("❌ Invalid operation choice. Skipping this course.")
-#             continue
-
-#         course_list.append({
-#             "course": course,
-#             "group": group,
-#             "ins_view": ins_view,
-#             "operation": operation,
-#             "done": False
-#         })
-
-#         another = input("➕ Do you want to add another course? (y/n): ").strip().lower()
-#         if another != 'y':
-#             break
-
-#     return course_list
-
-
 def main(stno, term_code, raw_cookie, course_list):
     print("🔹 Auto Unit Selection Bot Started")
-
-    # 🧾 Get inputs
-    # stno = input("Enter your Student Number (StNo): ").strip()
-    # term_code = input("Enter Term Code (e.g., 14033): ").strip()
-    # stno = 140215365450
-    # term_code = 14033
-    # raw_cookie = input("\nPaste your full Cookie header from browser (one line):\n").strip()
     term_code = "14041"
-    # 🧾 Create session with headers and cookies
     session = create_session(raw_cookie)
-
-    # 🧾 Get courses
-    # course_list = get_course_list()
 
     # 🚀 Start keep-alive thread after inputs are done
     threading.Thread(target=keep_session_alive_loop, args=(session,), daemon=True).start()
@@ -130,10 +82,6 @@ def main(stno, term_code, raw_cookie, course_list):
                 if is_done(result["status_code"], item["operation"]):
                     item["done"] = True
 
-                # Save response only if result is a dictionary with status_code
-                # if isinstance(result, dict) and "status_code" in result:
-                #     save_response(result["status_code"], html)
-
             except Exception as e:
                 print(traceback.format_exc())
                 print(f"❌ Error while sending request for course {item['course']}: {str(e)}")
@@ -145,7 +93,3 @@ def main(stno, term_code, raw_cookie, course_list):
         round_num += 1
         print("\n⏱ Waiting 5 seconds before next round...")
         time.sleep(5)
-
-
-# if __name__ == "__main__":
-#     main()
