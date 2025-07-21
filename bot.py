@@ -153,6 +153,15 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         context.user_data.clear()
 
+    elif data == "already_saved_continue":
+        await query.answer()
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text="🏠 منوی اصلی:"
+            reply_markup=main_menu_keyboard()
+        )
+        context.user_data.clear()
+
     elif data == "edit_student_info":
         context.user_data.clear()
         context.user_data["awaiting_student_code"] = True
