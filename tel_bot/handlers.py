@@ -334,9 +334,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 "done": False
             })
 
-        # اگر term_code در context نیست، مقدار پیش‌فرض بده یا از جایی دریافت کن
-        # term_code = context.user_data.get("term_code", "14031")
-
         # اجرای تابع main.py در thread جداگانه
         threading.Thread(
             target=main,
