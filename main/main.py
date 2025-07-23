@@ -18,7 +18,7 @@ def keep_session_alive_loop(session):
 
 def main(stno, term_code, raw_cookie, course_list):
     print("🔹 Auto Unit Selection Bot Started")
-    term_code = "14041"
+
     session = create_session(raw_cookie)
 
     # 🚀 Start keep-alive thread after inputs are done

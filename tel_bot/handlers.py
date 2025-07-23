@@ -11,6 +11,16 @@ import threading
 term_code = 14041
 
 
+def get_student_number_by_telegram_id(user_id):
+    session = SessionLocal()
+    student = session.query(StudentStatus).filter_by(telegram_user_id=str(user_id)).first()
+    session.close()
+
+    if student and student.student_number:
+        return student.student_number
+    return None
+
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if context.user_data.get("agreed_to_terms"):
         await update.message.reply_text("👋 منوی اصلی:", reply_markup=main_menu_keyboard())
@@ -218,6 +228,20 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     if text == "📚 انتخاب واحد":
+        user_id = update.effective_user.id
+
+        # بررسی وجود اطلاعات دانشجو
+        student = get_student_number_by_telegram_id(user_id)
+
+        if not student:
+            await update.message.reply_text(
+                "❌ شما هنوز اطلاعات خود را ثبت نکرده‌اید.\n\n"
+                "لطفاً ابتدا اطلاعات خود را ثبت کن.",
+                reply_markup=back_home_keyboard()
+            )
+            return
+
+        # اگر اطلاعات ذخیره شده باشد، ادامه بده
         context.user_data.clear()
         context.user_data["awaiting_course_code"] = True
         await update.message.reply_text(
@@ -337,7 +361,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # اجرای تابع main.py در thread جداگانه
         threading.Thread(
             target=main,
-            args=(stno, cookie, course_list),
+            args=(stno, term_code, cookie, course_list),
             daemon=True
         ).start()
 
