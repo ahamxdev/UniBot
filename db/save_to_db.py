@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from db.models import StudentInfo, StudentStatus, PaymentStatusEnum
 from db.db import SessionLocal, init_db
 
+
 # Initialize database (e.g. create tables if they don't exist)
 init_db()
 
@@ -114,12 +115,12 @@ def save_student_info(student_data: dict, session: Session = None) -> StudentInf
 
 
 def save_student_status(status_data: dict, session: Session = None) -> bool:
-    print(f"📥 Received status data: {status_data}")
     """
     Inserts or updates student status:
     - On first insert, assigns a new row_index, telegram_user_id, and student_number.
     - On update, updates student_number, and optionally payment_status and discount_code.
     """
+    print(f"📥 Received status data: {status_data}")
     external_session = session is not None
     session = session or SessionLocal()
 

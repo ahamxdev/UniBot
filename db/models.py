@@ -4,12 +4,10 @@ from db.db import Base
 import enum
 
 
-
 class PaymentStatusEnum(enum.Enum):
     not_paid = "not_paid"
     paid = "paid"
     paid_with_discount = "paid_with_discount"
-
 
 
 class StudentInfo(Base):
@@ -31,13 +29,12 @@ class StudentInfo(Base):
     status = Column(String)
     date = Column(String)
 
-    # ارتباط یک‌به‌یک با StudentStatus
+    # One to One relationship with StudentStatus
     status_info = relationship(
         "StudentStatus",
         back_populates="student",
         uselist=False,
     )
-
 
 
 # class SelectedCourse(Base):
@@ -64,7 +61,6 @@ class StudentInfo(Base):
 #     student = relationship("StudentInfo", back_populates="courses")
 
 
-
 class StudentStatus(Base):
     """
     ORM model for the 'students_status' table.
@@ -79,7 +75,7 @@ class StudentStatus(Base):
     payment_status = Column(Enum(PaymentStatusEnum), nullable=False, default=PaymentStatusEnum.not_paid)
     discount_code = Column(String, nullable=True)
 
-    # ارتباط یک‌به‌یک با StudentInfo
+    # One to One relationship with StudentInfo
     student = relationship(
         "StudentInfo",
         back_populates="status_info",

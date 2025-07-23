@@ -2,6 +2,7 @@ from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandle
 from tel_bot.config import TOKEN
 from tel_bot.handlers import start, handle_message, button_handler
 
+
 if __name__ == "__main__":
     app = ApplicationBuilder().token(TOKEN).build()
 
