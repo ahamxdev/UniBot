@@ -39,5 +39,5 @@ jobs:
             pip install -r requirements.txt
             deactivate
 
-            echo "[5] 🚀 Restart bot service"
+            echo "[5] 🚀 Start bot service"
             systemctl start unibot
