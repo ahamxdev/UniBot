@@ -147,10 +147,14 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if context.user_data.get("feedback_mode"):
         context.user_data["feedback_mode"] = False
+
+        text = update.message.text
         await update.message.reply_text("🙏 ممنون که نظرت رو گفتی!")
+
         user = update.effective_user
         username = f"@{user.username}" if user.username else f"ID:{user.id}"
         feedback = f"📩 انتقاد جدید از {username}:\n\n\"{text}\""
+
         await context.bot.send_message(chat_id=ADMIN_CHAT_ID, text=feedback)
         return
 
