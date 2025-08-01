@@ -1,11 +1,27 @@
 from telegram import ReplyKeyboardMarkup
 
+
+def admin_menu_keyboard():
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            ["👨‍🎓 اطلاعات دانشجویی"],
+            ["📚 انتخاب واحد"],
+            ["💳 مالی"],
+            ["📖 راهنمای بات"],
+            ["💬 ارسال پیام همگانی"],
+            ["🛠 مدیریت بات"]
+        ],
+        resize_keyboard=True,
+        one_time_keyboard=False
+    )
+
+
 def main_menu_keyboard():
     return ReplyKeyboardMarkup(
         keyboard=[
             ["👨‍🎓 اطلاعات دانشجویی"],
             ["📚 انتخاب واحد"],
-            ["💳 پرداخت"],
+            ["💳 خرید اشتراک"],
             ["📖 راهنمای بات"],
             ["💬 گزارش و انتقادات"]
         ],
