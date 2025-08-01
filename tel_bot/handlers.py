@@ -19,7 +19,7 @@ term_code = 14041
 
 
 def is_admin(user_id):
-    return user_id in ADMIN_IDS
+    return user_id in ADMIN_CHAT_ID
 
 
 def get_student_number_by_telegram_id(user_id):
