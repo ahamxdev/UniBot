@@ -1,29 +1,36 @@
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes
-from tel_bot.keyboard import main_menu_keyboard, back_home_keyboard, post_selection_keyboard, payment_options_keyboard
+from tel_bot.keyboard import (
+    main_menu_keyboard,
+    admin_menu_keyboard,
+    back_home_keyboard,
+    post_selection_keyboard,
+    payment_options_keyboard
+)
+from tel_bot.config import ADMIN_CHAT_ID
 from db.save_to_db import save_student_status
 from db.models import StudentStatus
 from db.db import SessionLocal
 from main.main import main
 import threading
 
-
 term_code = 14041
-
 
 def get_student_number_by_telegram_id(user_id):
     session = SessionLocal()
     student = session.query(StudentStatus).filter_by(telegram_user_id=str(user_id)).first()
     session.close()
-
     if student and student.student_number:
         return student.student_number
     return None
 
+def get_main_menu_for_user(user_id: int):
+    return admin_menu_keyboard() if user_id in ADMIN_CHAT_ID else main_menu_keyboard()
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
     if context.user_data.get("agreed_to_terms"):
-        await update.message.reply_text("👋 منوی اصلی:", reply_markup=main_menu_keyboard())
+        await update.message.reply_text("👋 منوی اصلی:", reply_markup=get_main_menu_for_user(user_id))
         return
 
     terms_text = (
@@ -39,7 +46,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
     terms_keyboard = back_home_keyboard([["✅ مطالعه کرده و موافقت میکنم"]])
-
     await update.message.reply_text(
         text=terms_text,
         parse_mode="HTML",
