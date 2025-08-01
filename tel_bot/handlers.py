@@ -15,6 +15,7 @@ from main.main import main
 import threading
 
 
+user = update.effective_user
 term_code = 14041
 
 def get_student_number_by_telegram_id(user_id):
