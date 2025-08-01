@@ -411,6 +411,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     if text == "💬 گزارش و انتقادات":
+        context.user_data.clear()
         context.user_data["feedback_mode"] = True
         await update.message.reply_text("💬 لطفاً نظرت رو بنویس:", reply_markup=back_home_keyboard())
         return
