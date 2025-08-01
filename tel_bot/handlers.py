@@ -412,5 +412,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if text == "💬 گزارش و انتقادات":
         context.user_data["feedback_mode"] = True
         await update.message.reply_text("💬 لطفاً نظرت رو بنویس:", reply_markup=back_home_keyboard())
+        return
 
     await update.message.reply_text("دستور ناشناخته است یا در مرحله‌ی اشتباهی قرار دارید.", reply_markup=back_home_keyboard())
