@@ -101,7 +101,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await context.bot.send_message(
                 chat_id=chat_id,
                 text="✅ اطلاعات دانشجویی شما با موفقیت ثبت شد.",
-                reply_markup=reply_markup=get_main_menu_for_user(user_id)
+                reply_markup=get_main_menu_for_user(user_id)
             )
         except Exception as e:
             await context.bot.send_message(chat_id=chat_id, text="❌ خطایی در ذخیره اطلاعات رخ داد.")
@@ -111,7 +111,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             context.user_data.clear()
 
     elif data == "already_saved_continue":
-        await context.bot.send_message(chat_id=chat_id, text="اطلاعات شما ذخیره شده.\n\n🏠 منوی اصلی:", reply_markup=reply_markup=get_main_menu_for_user(user_id))
+        await context.bot.send_message(chat_id=chat_id, text="اطلاعات شما ذخیره شده.\n\n🏠 منوی اصلی:", reply_markup=get_main_menu_for_user(user_id))
         context.user_data.clear()
 
     elif data == "edit_student_info":
@@ -141,7 +141,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         context.user_data.pop("group_code", None)
 
     elif data == "back_home":
-        await context.bot.send_message(chat_id=chat_id, text="🏠 منوی اصلی:", reply_markup=reply_markup=get_main_menu_for_user(user_id))
+        await context.bot.send_message(chat_id=chat_id, text="🏠 منوی اصلی:", reply_markup=get_main_menu_for_user(user_id))
         context.user_data.clear()
 
 
@@ -156,13 +156,13 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         context.user_data["agreed_to_terms"] = True
         await update.message.reply_text(
             "ممنون از موافقتت 🙏\n\n📌 حالا یکی از گزینه های زیر رو انتخاب کن 👇",
-            reply_markup=reply_markup=get_main_menu_for_user(user_id)
+            reply_markup=get_main_menu_for_user(user_id)
         )
         return
 
     if text == "❌ انصراف":
         context.user_data.clear()
-        await update.message.reply_text("🏠 منوی اصلی:", reply_markup=reply_markup=get_main_menu_for_user(user_id))
+        await update.message.reply_text("🏠 منوی اصلی:", reply_markup=get_main_menu_for_user(user_id))
         return
 
     if text == "👨‍🎓 اطلاعات دانشجویی":
@@ -259,7 +259,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if context.user_data.get("awaiting_course_code"):
         if text == "❌ انصراف":
             context.user_data.clear()
-            await update.message.reply_text("🏠 منوی اصلی:", reply_markup=reply_markup=get_main_menu_for_user(user_id))
+            await update.message.reply_text("🏠 منوی اصلی:", reply_markup=get_main_menu_for_user(user_id))
             return
 
         if not text.isdigit():
@@ -279,7 +279,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if context.user_data.get("awaiting_group_code"):
         if text == "❌ انصراف":
             context.user_data.clear()
-            await update.message.reply_text("🏠 منوی اصلی:", reply_markup=reply_markup=get_main_menu_for_user(user_id))
+            await update.message.reply_text("🏠 منوی اصلی:", reply_markup=get_main_menu_for_user(user_id))
             return
 
         if not text.isdigit():
@@ -309,7 +309,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         selected_courses = context.user_data.get("selected_courses", [])
 
         if not selected_courses:
-            await update.message.reply_text("⚠️ هنوز درسی ثبت نشده است!", reply_markup=reply_markup=get_main_menu_for_user(user_id))
+            await update.message.reply_text("⚠️ هنوز درسی ثبت نشده است!", reply_markup=get_main_menu_for_user(user_id))
             return
 
         summary = "📚 لیست نهایی عملیات:\n"
@@ -331,7 +331,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         selected_courses = context.user_data.get("selected_courses", [])
         if not selected_courses:
-            await update.message.reply_text("⚠️ لیست دروس خالی است!", reply_markup=reply_markup=get_main_menu_for_user(user_id))
+            await update.message.reply_text("⚠️ لیست دروس خالی است!", reply_markup=get_main_menu_for_user(user_id))
             return
 
         telegram_user_id = str(update.effective_chat.id)
@@ -342,11 +342,11 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         try:
             student = session.query(StudentStatus).filter_by(telegram_user_id=telegram_user_id).first()
             if not student or not student.student_number:
-                await update.message.reply_text("❌ کد دانشجویی شما در پایگاه داده یافت نشد.", reply_markup=reply_markup=get_main_menu_for_user(user_id))
+                await update.message.reply_text("❌ کد دانشجویی شما در پایگاه داده یافت نشد.", reply_markup=get_main_menu_for_user(user_id))
                 return
             stno = student.student_number
         except Exception as e:
-            await update.message.reply_text(f"❌ خطا در بازیابی اطلاعات دانشجویی:\n{e}", reply_markup=reply_markup=get_main_menu_for_user(user_id))
+            await update.message.reply_text(f"❌ خطا در بازیابی اطلاعات دانشجویی:\n{e}", reply_markup=get_main_menu_for_user(user_id))
             return
         finally:
             session.close()
@@ -373,7 +373,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         await update.message.reply_text(
             "✅ عملیات ثبت نهایی دروس درحال اجراست.\n\nدرصورت موفقیت یا بروز خطا، اطلاع‌رسانی خواهد شد.",
-            reply_markup=reply_markup=get_main_menu_for_user(user_id)
+            reply_markup=get_main_menu_for_user(user_id)
         )
 
         context.user_data.clear()
