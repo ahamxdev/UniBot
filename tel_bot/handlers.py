@@ -1,6 +1,6 @@
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes
-from tel_bot.keyboard import main_menu_keyboard, back_home_keyboard, post_selection_keyboard
+from tel_bot.keyboard import main_menu_keyboard, back_home_keyboard, post_selection_keyboard, payment_options_keyboard
 from db.save_to_db import save_student_status
 from db.models import StudentStatus
 from db.db import SessionLocal
@@ -371,6 +371,23 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
         context.user_data.clear()
+        return
+
+    if text == "💳 خرید اشتراک":
+        context.user_data.clear()
+
+        message = (
+            "لطفاً یکی از گزینه‌های پرداخت را انتخاب کن:\n\n"
+            "⚠️ <b>توجه:</b> خرید اشتراک بر اساس <b>کد دانشجویی ثبت‌شده</b> شما انجام می‌شود.\n"
+            "در صورت وارد کردن اشتباه، <b>مبلغ قابل عودت نیست</b>.\n"
+            "لطفاً از صحت اطلاعات خود اطمینان حاصل کنید."
+        )
+
+        await update.message.reply_text(
+            message,
+            parse_mode="HTML",
+            reply_markup=payment_options_keyboard()
+        )
         return
 
     await update.message.reply_text("دستور ناشناخته است یا در مرحله‌ی اشتباهی قرار دارید.", reply_markup=back_home_keyboard())

@@ -28,3 +28,14 @@ def post_selection_keyboard():
         ],
         resize_keyboard=True
     )
+
+
+def payment_options_keyboard():
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            ["🎟 اعمال کد تخفیف"],
+            ["💰 پرداخت"],
+            ["❌ انصراف"]
+        ],
+        resize_keyboard=True
+    )
