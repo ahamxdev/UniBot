@@ -55,3 +55,14 @@ def payment_options_keyboard():
         ],
         resize_keyboard=True
     )
+
+
+# def payment_options_keyboard():
+#     return ReplyKeyboardMarkup(
+#         keyboard=[
+#             ["🎟 تخصیص کد تخفیف"],
+#             ["💰 تعداد پرداخت ها"],
+#             ["❌ انصراف"]
+#         ],
+#         resize_keyboard=True
+#     )

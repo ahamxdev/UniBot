@@ -14,6 +14,7 @@ from db.db import SessionLocal
 from main.main import main
 import threading
 
+
 term_code = 14041
 
 def get_student_number_by_telegram_id(user_id):
@@ -144,6 +145,14 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await context.bot.send_message(chat_id=chat_id, text="🏠 منوی اصلی:", reply_markup=get_main_menu_for_user(user_id))
         context.user_data.clear()
 
+    if context.user_data.get("feedback_mode"):
+        context.user_data["feedback_mode"] = False
+        await update.message.reply_text("🙏 ممنون که نظرت رو گفتی!")
+        username = f"@{user.username}" if user.username else f"ID:{user.id}"
+        feedback = f"📩 انتقاد جدید از {username}:\n\n\"{text}\""
+        await context.bot.send_message(chat_id=ADMIN_CHAT_ID, text=feedback)
+        return
+
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
@@ -243,7 +252,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not student:
             await update.message.reply_text(
                 "❌ شما هنوز اطلاعات خود را ثبت نکرده‌اید.\n\n"
-                "لطفاً ابتدا اطلاعات خود را ثبت کن.",
+                "لطفاً ابتدا اطلاعات خود را از بخش اطلاعات دانشجویی وارد کنید.",
                 reply_markup=back_home_keyboard()
             )
             return
@@ -399,5 +408,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=payment_options_keyboard()
         )
         return
+
+    if text == "💬 گزارش و انتقادات":
+        context.user_data["feedback_mode"] = True
+        await update.message.reply_text("💬 لطفاً نظرت رو بنویس:", reply_markup=back_home_keyboard())
 
     await update.message.reply_text("دستور ناشناخته است یا در مرحله‌ی اشتباهی قرار دارید.", reply_markup=back_home_keyboard())
