@@ -16,7 +16,7 @@ jobs:
       - name: Deploy to server via SSH
         uses: appleboy/ssh-action@v1.0.0
         with:
-          host: 114.129.8.23
+          host: 62.60.245.182
           username: root
           key: ${{ secrets.UNIBOT_DEPLOY_KEY }}
           port: 22
