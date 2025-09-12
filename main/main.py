@@ -117,7 +117,8 @@ def main(stno, term_code, raw_cookie, course_list, chat_id):
                 # print("[MQ] put:", (chat_id, result["message"][:40]))  # DEBUG
 
                 # Push message to queue for Telegram bot
-                message_queue.put_nowait((chat_id, result["message"]))
+                if result["status_code"] =! "capacity_full":
+                    message_queue.put_nowait((chat_id, result["message"]))
 
                 # Extract and save student info
                 student_info = extract_data(html)
