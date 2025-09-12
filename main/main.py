@@ -153,9 +153,15 @@ def main(stno, term_code, raw_cookie, course_list, chat_id):
 
             except Exception as e:
                 print(traceback.format_exc())
-                print(
-                    f"❌ Error while sending request for course {item['course']}: {str(e)}"
+                error_msg = (
+                    f"❌ خطا هنگام ارسال درخواست برای درس {item['course']} - گروه {item['group']}:\n"
+                    f"{str(e)}"
                 )
+                print(error_msg)
+                try:
+                    message_queue.put_nowait((chat_id, error_msg))
+                except Exception:
+                    pass
 
         if all_done:
             print("\n✅ All tasks completed. Exiting loop.")
