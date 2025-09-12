@@ -24,7 +24,7 @@ jobs:
             set -e
 
             echo "[1] 🔻 Stop bot service"
-            systemctl stop unibot
+            systemctl stop UniBot
 
             echo "[2] 📂 Go to project folder"
             cd /root/UniBot
