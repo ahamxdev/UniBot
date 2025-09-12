@@ -40,4 +40,4 @@ jobs:
             deactivate
 
             echo "[5] 🚀 Start bot service"
-            systemctl start unibot
+            systemctl start UniBot
