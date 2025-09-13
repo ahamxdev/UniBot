@@ -22,6 +22,7 @@ Design:
 import time
 import threading
 import traceback
+from typing import Optional
 from main.response_checker import analyze_response
 from main.network_module import create_session, send_course_request, send_keep_alive_ping
 from main.logic_module import is_done
@@ -37,12 +38,22 @@ def keep_session_alive_loop(session):
     Runs indefinitely in a daemon thread.
     """
     print("\n🛟 Keep-alive thread started.\n")
-    while True:
-        time.sleep(5 * 60)  # every 5 minutes
-        send_keep_alive_ping(session)
+    while not cancel_event.is_set():
+        # هر ۵ دقیقه:
+        for _ in range(5 * 60):
+            if cancel_event.is_set():
+                break
+            time.sleep(1)
+        if cancel_event.is_set():
+            break
+        try:
+            send_keep_alive_ping(session)
+        except Exception as e:
+            print(f"[KeepAlive] Error: {e}")
+    print("🛟 Keep-alive thread exiting.")
 
 
-def main(stno, term_code, raw_cookie, course_list, chat_id):
+def main(stno, term_code, raw_cookie, course_list, chat_id, cancel_event: threading.Event):
     """
     Main loop for processing unit selection requests.
 
@@ -68,6 +79,10 @@ def main(stno, term_code, raw_cookie, course_list, chat_id):
     """
     print("🔹 Auto Unit Selection Bot Started")
 
+    if cancel_event.is_set():
+        print("🔹 Cancel requested before start; exiting.")
+        return
+
     # Create authenticated session
     session = create_session(raw_cookie)
 
@@ -80,11 +95,14 @@ def main(stno, term_code, raw_cookie, course_list, chat_id):
     round_num = 1
     student_info_printed = False
 
-    while True:
+    while not cancel_event.is_set():
         print(f"\n📘 Round {round_num}")
         all_done = True
 
         for item in course_list:
+            if cancel_event.is_set():
+                break
+
             if item["done"]:
                 continue
 
@@ -164,10 +182,23 @@ def main(stno, term_code, raw_cookie, course_list, chat_id):
                 except Exception:
                     pass
 
+        if cancel_event.is_set():
+            print("🛑 Cancel requested; exiting submission loop.")
+            break
+
         if all_done:
             print("\n✅ All tasks completed. Exiting loop.")
             break
 
         round_num += 1
         print("⏱ Waiting 5 seconds before next round...")
-        time.sleep(5)
+        for _ in range(5):
+            if cancel_event.is_set():
+                break
+            time.sleep(1)
+
+    if cancel_event.is_set():
+        try:
+            message_queue.put_nowait((chat_id, "⛔️ عملیات به درخواست شما متوقف شد."))
+        except Exception:
+            pass

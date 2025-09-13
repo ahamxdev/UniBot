@@ -1,31 +1,31 @@
-# handlers.py
+# tel_bot/handlers.py
 """
-Telegram bot handlers and the message-queue consumer job.
+Telegram update handlers + queue workers + cooperative cancel support.
 
-This module:
-  - Provides high-level command/message/callback handlers (PTB v20+ style).
-  - Exposes a repeating JobQueue task to drain the outbound message queue.
-  - Avoids creating an Application instance here; the entry point is responsible
-    for building the Application, registering handlers, connecting the job, and running.
+Highlights
+----------
+- Event-driven queue workers: messages pushed to `message_queue` are delivered
+  immediately (no interval JobQueue needed).
+- Cooperative cancel for long-running registration: a per-chat cancel Event is
+  stored in bot_data; the background thread checks it and exits cleanly.
+- Prevents overlapping runs per chat: one active run per user.
 
-Usage from your entry point (e.g., bot.py):
-    from handlers import (
-        start, handle_message, button_handler, setup_message_queue_job
-    )
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CallbackQueryHandler(button_handler))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-    setup_message_queue_job(app)
+Public API
+----------
+- start(update, context)
+- handle_message(update, context)
+- button_handler(update, context)
+- start_message_queue_workers(application, workers=3)
 """
 
 from __future__ import annotations
 
-from typing import Optional, Tuple
-from queue import Empty
-
+import asyncio
 import threading
+from typing import Optional, Tuple, Dict, Any
+
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
-from telegram.ext import ContextTypes
+from telegram.ext import ContextTypes, Application
 
 from tel_bot.keyboard import (
     main_menu_keyboard,
@@ -35,45 +35,33 @@ from tel_bot.keyboard import (
     payment_options_keyboard,
 )
 from tel_bot.config import ADMIN_CHAT_ID
-from tel_bot.message_queue import message_queue
-# from db.save_to_db import save_student_status
 from db.models import StudentStatus
 from db.db import SessionLocal
-from main.main import main
+from main.main import main  # main(stno, term_code, cookie, course_list, chat_id, cancel_event)
+from tel_bot.message_queue import message_queue
 
 
-# -------------------------------------------------------------------
-# Configuration
-# -------------------------------------------------------------------
-TERM_CODE: int = 14041
+# ---------------------------
+# Config
+# ---------------------------
+TERM_CODE = 14041
+RUNS_KEY = "active_runs"  # bot_data registry: { chat_id: {"thread": Thread, "cancel_event": Event} }
 
 
-# -------------------------------------------------------------------
-# Helper functions
-# -------------------------------------------------------------------
+# ---------------------------
+# Helpers: roles & menus
+# ---------------------------
 def _is_admin(user_id: int) -> bool:
-    """
-    Return True if the given user_id is an admin according to ADMIN_CHAT_ID.
-    ADMIN_CHAT_ID may be a single int or a collection of ints.
-    """
     if isinstance(ADMIN_CHAT_ID, (list, set, tuple)):
         return user_id in ADMIN_CHAT_ID
     return user_id == ADMIN_CHAT_ID
 
 
 def get_main_menu_for_user(user_id: int):
-    """
-    Return the appropriate main menu keyboard for the given user.
-    Admins see the admin menu; others see the standard menu.
-    """
     return admin_menu_keyboard() if _is_admin(user_id) else main_menu_keyboard()
 
 
 def get_student_number_by_telegram_id(user_id: int) -> Optional[str]:
-    """
-    Look up the student's registered number (stno) by Telegram user_id.
-    Returns the student number as a string if present; otherwise None.
-    """
     session = SessionLocal()
     try:
         student = (
@@ -88,56 +76,108 @@ def get_student_number_by_telegram_id(user_id: int) -> Optional[str]:
         session.close()
 
 
-# -------------------------------------------------------------------
-# JobQueue task: drain outbound message queue
-# -------------------------------------------------------------------
-async def message_queue_consumer(context: ContextTypes.DEFAULT_TYPE) -> None:
+# ---------------------------
+# Queue workers (event-driven)
+# ---------------------------
+async def _mq_worker(application: Application, worker_id: int = 0) -> None:
     """
-    Drain the outbound message queue on each tick and deliver messages.
-    Use a per-tick cap to avoid flooding users if a large backlog exists.
+    Long-lived async task: blocks on queue.get() off-thread and sends messages
+    immediately as they arrive.
     """
-    max_per_tick = 50
-    for _ in range(max_per_tick):
+    bot = application.bot
+    while True:
+        # Block without blocking the event loop
+        chat_id, message = await asyncio.to_thread(message_queue.get)
         try:
-            item: Tuple[int, str] = message_queue.get_nowait()
-        except Empty:
-            break
-
-        chat_id, message = item
-        try:
-            await context.bot.send_message(chat_id=chat_id, text=message)
+            await bot.send_message(chat_id=chat_id, text=message)
         except Exception:
-            # Ignore failures silently; optionally log in dev
-            continue
+            # Optionally log in dev
+            pass
+        finally:
+            try:
+                message_queue.task_done()
+            except Exception:
+                pass
 
 
-def setup_message_queue_job(application) -> None:
+async def start_message_queue_workers(application: Application, workers: int = 3) -> None:
     """
-    Attach the repeating queue-consumer job to the given Application's JobQueue.
-    Prevent overlapping runs and suppress APScheduler warnings.
+    Start N background workers that drain the queue immediately.
+    IMPORTANT: Call from Application.post_init (loop is running).
     """
-    application.job_queue.run_repeating(
-        message_queue_consumer,
-        interval=1.0,      # safer than 0.5s, avoids overlap
-        first=1.0,
-        name="mq_consumer",
-        job_kwargs={
-            "coalesce": True,        # merge missed runs
-            "max_instances": 1,      # never run more than one instance at a time
-            "misfire_grace_time": 5  # give a few seconds grace if one run is late
-        },
+    for i in range(workers):
+        application.create_task(_mq_worker(application, worker_id=i), name=f"mq_worker_{i}")
+
+
+# ---------------------------
+# Run registry & cancel helpers
+# ---------------------------
+def _runs(context: ContextTypes.DEFAULT_TYPE) -> Dict[int, Dict[str, Any]]:
+    d = context.application.bot_data.get(RUNS_KEY)
+    if d is None:
+        d = {}
+        context.application.bot_data[RUNS_KEY] = d
+    return d
+
+
+def _start_run_for_chat(
+    context: ContextTypes.DEFAULT_TYPE,
+    chat_id: int,
+    target,
+    args_tuple: tuple,
+) -> bool:
+    """
+    Start a background thread for this chat if none is active.
+    Returns True if started, False if already running.
+    """
+    runs = _runs(context)
+    # Clean stale record
+    if chat_id in runs and not runs[chat_id]["thread"].is_alive():
+        runs.pop(chat_id, None)
+
+    if chat_id in runs:
+        return False  # already active
+
+    cancel_event = threading.Event()
+    t = threading.Thread(target=target, args=(*args_tuple, cancel_event), daemon=True)
+    t.start()
+    runs[chat_id] = {"thread": t, "cancel_event": cancel_event}
+    return True
+
+
+def _cancel_run_for_chat(context: ContextTypes.DEFAULT_TYPE, chat_id: int) -> bool:
+    """
+    Signal cancel for the active run of this chat (if any).
+    Returns True if a run existed and was signaled.
+    """
+    runs = _runs(context)
+    data = runs.get(chat_id)
+    if not data:
+        return False
+    data["cancel_event"].set()
+    return True
+
+
+def _clear_run_if_finished(context: ContextTypes.DEFAULT_TYPE, chat_id: int) -> None:
+    """
+    Remove finished run record from registry (optional hygiene).
+    """
+    runs = _runs(context)
+    data = runs.get(chat_id)
+    if data and not data["thread"].is_alive():
+        runs.pop(chat_id, None)
+
+
+def _cancel_keyboard() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        [[InlineKeyboardButton("❌ توقف عملیات", callback_data="cancel_run")]]
     )
 
 
-# -------------------------------------------------------------------
+# ---------------------------
 # Handlers
-# -------------------------------------------------------------------
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """
-    /start command handler:
-    - If user already accepted terms, show the main menu.
-    - Otherwise, present terms and a confirmation button.
-    """
+# ---------------------------
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     if context.user_data.get("agreed_to_terms"):
         await update.message.reply_text(
@@ -163,17 +203,24 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     )
 
 
-async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """
-    CallbackQuery handler:
-    - Handles term selection, student info confirmation/edit, and unit select/remove actions.
-    """
+async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # CallbackQuery-only
     query = update.callback_query
     await query.answer()
 
     user_id = query.from_user.id
     chat_id = query.message.chat.id
     data = query.data
+
+    # --- Cancel current run ---
+    if data == "cancel_run":
+        ok = _cancel_run_for_chat(context, chat_id)
+        if ok:
+            await context.bot.send_message(chat_id=chat_id, text="⛔️ عملیات متوقف شد. لطفاً چند لحظه صبر کنید.")
+        else:
+            await context.bot.send_message(chat_id=chat_id, text="ℹ️ عملیات فعالی برای توقف یافت نشد.")
+        _clear_run_if_finished(context, chat_id)
+        return
 
     if data.startswith("term_"):
         selected_term = data.replace("term_", "")
@@ -231,11 +278,11 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
                 text="✅ اطلاعات دانشجویی شما با موفقیت ثبت شد.",
                 reply_markup=get_main_menu_for_user(user_id),
             )
-        except Exception:
-            # Consider logging the exception for observability.
+        except Exception as e:
             await context.bot.send_message(
                 chat_id=chat_id, text="❌ خطایی در ذخیره اطلاعات رخ داد."
             )
+            print(f"[Student save error]: {e}")
         finally:
             session.close()
             context.user_data.clear()
@@ -285,16 +332,15 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         context.user_data.clear()
 
 
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """
-    Text message handler:
-    - Orchestrates the wizard flow (student info, course/group input, finalization).
-    - Also handles feedback collection.
-    """
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
+    chat_id = update.effective_chat.id
     text = (update.message.text or "").strip()
 
-    # Feedback flow
+    # Clear stale run record, if any
+    _clear_run_if_finished(context, chat_id)
+
+    # --- Feedback flow ---
     if context.user_data.get("feedback_mode"):
         context.user_data["feedback_mode"] = False
 
@@ -306,11 +352,11 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
         try:
             await context.bot.send_message(chat_id=ADMIN_CHAT_ID, text=feedback)
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[Feedback] Error sending to admin: {e}")
         return
 
-    # Start / Terms
+    # --- Normal flow ---
     if text == "/start":
         await start(update, context)
         return
@@ -318,22 +364,24 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     if text == "✅ مطالعه کرده و موافقت میکنم":
         context.user_data["agreed_to_terms"] = True
         await update.message.reply_text(
-            "ممنون از موافقتت 🙏\n\n📌 حالا یکی از گزینه های زیر رو انتخاب کن 👇",
+            "ممنون از موافقتت 🙏\n\n📌 حالا یکی از گزینه های زیر را انتخاب کن 👇",
             reply_markup=get_main_menu_for_user(user_id),
         )
         return
 
     if text == "❌ انصراف":
+        # If a run is active, cancel it first
+        if _cancel_run_for_chat(context, chat_id):
+            await update.message.reply_text("⛔️ عملیات جاری متوقف شد.")
         context.user_data.clear()
         await update.message.reply_text(
             "🏠 منوی اصلی:", reply_markup=get_main_menu_for_user(user_id)
         )
         return
 
-    # Student info
     if text == "👨‍🎓 اطلاعات دانشجویی":
         context.user_data.clear()
-        telegram_user_id = str(update.effective_chat.id)
+        telegram_user_id = str(chat_id)
 
         session = SessionLocal()
         try:
@@ -375,7 +423,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         finally:
             session.close()
 
-    # Student code → term selection
+    # انتخاب ترم پس از وارد کردن کد دانشجویی
     if context.user_data.get("awaiting_student_code"):
         if not text.isdigit():
             await update.message.reply_text(
@@ -393,9 +441,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         await update.message.reply_text("📘 لطفاً کد ترم را انتخاب کن:", reply_markup=keyboard)
         return
 
-    # Unit selection flow
     if text == "📚 انتخاب واحد":
-        # Ensure student info exists
+        # بررسی وجود اطلاعات دانشجو
         student = get_student_number_by_telegram_id(user_id)
         if not student:
             await update.message.reply_text(
@@ -414,6 +461,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
     if context.user_data.get("awaiting_course_code"):
         if text == "❌ انصراف":
+            _cancel_run_for_chat(context, chat_id)
             context.user_data.clear()
             await update.message.reply_text(
                 "🏠 منوی اصلی:", reply_markup=get_main_menu_for_user(user_id)
@@ -437,6 +485,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
     if context.user_data.get("awaiting_group_code"):
         if text == "❌ انصراف":
+            _cancel_run_for_chat(context, chat_id)
             context.user_data.clear()
             await update.message.reply_text(
                 "🏠 منوی اصلی:", reply_markup=get_main_menu_for_user(user_id)
@@ -507,10 +556,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             )
             return
 
-        telegram_user_id = str(update.effective_chat.id)
+        telegram_user_id = str(chat_id)
         cookie = context.user_data["cookie"]
 
-        # Fetch student data to get stno
+        # اتصال به دیتابیس برای گرفتن کد دانشجویی
         session = SessionLocal()
         try:
             student = (
@@ -534,7 +583,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         finally:
             session.close()
 
-        # Build the course operation list for main()
+        # تبدیل selected_courses به فرمت مورد انتظار
         course_list = []
         for item in selected_courses:
             ins_view = "4" if item["action"] == "انتخاب واحد" else "5"
@@ -549,23 +598,29 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
                 }
             )
 
-        # Run the main() process in a background thread
-        threading.Thread(
+        # شروع اجرای پس‌زمینه با قابلیت توقف (cancel_event)
+        started = _start_run_for_chat(
+            context,
+            chat_id,
             target=main,
-            args=(stno, TERM_CODE, cookie, course_list, update.effective_chat.id),
-            daemon=True,
-        ).start()
+            args_tuple=(stno, TERM_CODE, cookie, course_list, chat_id),
+        )
+
+        if not started:
+            await update.message.reply_text(
+                "⚠️ یک عملیات درحال اجراست. لطفاً ابتدا آن را متوقف کنید یا صبر کنید تمام شود."
+            )
+            return
 
         await update.message.reply_text(
             "✅ عملیات ثبت نهایی دروس درحال اجراست.\n\n"
             "درصورت موفقیت یا بروز خطا، اطلاع رسانی خواهد شد.",
-            reply_markup=get_main_menu_for_user(user_id),
+            reply_markup=_cancel_keyboard(),
         )
 
         context.user_data.clear()
         return
 
-    # Payment and feedback entry
     if text == "💳 خرید اشتراک":
         context.user_data.clear()
 
@@ -592,7 +647,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         )
         return
 
-    # Fallback
     await update.message.reply_text(
         "دستور ناشناخته است یا در مرحله‌ی اشتباهی قرار دارید.",
         reply_markup=back_home_keyboard(),
