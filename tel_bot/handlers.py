@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import asyncio
 import threading
-from typing import Optional, Tuple, Dict, Any
+from typing import Optional, Tuple, Dict, Any, Iterable
 
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes, Application
@@ -49,9 +49,10 @@ RUNS_KEY = "active_runs"  # bot_data registry: { chat_id: {"thread": Thread, "ca
 
 
 # ---------------------------
-# Helpers: roles & menus
+# Helpers: roles, menus, admin send
 # ---------------------------
 def _is_admin(user_id: int) -> bool:
+    """Return True if user_id is in ADMIN_CHAT_ID (supports single or iterable)."""
     if isinstance(ADMIN_CHAT_ID, (list, set, tuple)):
         return user_id in ADMIN_CHAT_ID
     return user_id == ADMIN_CHAT_ID
@@ -62,6 +63,7 @@ def get_main_menu_for_user(user_id: int):
 
 
 def get_student_number_by_telegram_id(user_id: int) -> Optional[str]:
+    """Look up the student's number (stno) by Telegram user_id."""
     session = SessionLocal()
     try:
         student = (
@@ -76,6 +78,36 @@ def get_student_number_by_telegram_id(user_id: int) -> Optional[str]:
         session.close()
 
 
+def _normalize_admin_ids() -> list[int]:
+    """
+    Normalize ADMIN_CHAT_ID to a list of ints.
+    Supports:
+      - single int
+      - single str of digits (e.g., from env)
+      - iterable of ints/strs
+    """
+    def _to_int(x: Any):
+        if isinstance(x, int):
+            return x
+        if isinstance(x, str) and x.strip().lstrip("-").isdigit():
+            return int(x)
+        return x  # leave as-is; send may fail (silently ignored)
+
+    if isinstance(ADMIN_CHAT_ID, (list, set, tuple)):
+        return [_to_int(x) for x in ADMIN_CHAT_ID]
+    return [_to_int(ADMIN_CHAT_ID)]
+
+
+async def _notify_admins(bot, text: str) -> None:
+    """Send `text` to all admin chat ids (robust to single/multiple ids)."""
+    for admin_id in _normalize_admin_ids():
+        try:
+            await bot.send_message(chat_id=admin_id, text=text)
+        except Exception:
+            # Optionally log in dev
+            continue
+
+
 # ---------------------------
 # Queue workers (event-driven)
 # ---------------------------
@@ -86,12 +118,10 @@ async def _mq_worker(application: Application, worker_id: int = 0) -> None:
     """
     bot = application.bot
     while True:
-        # Block without blocking the event loop
         chat_id, message = await asyncio.to_thread(message_queue.get)
         try:
             await bot.send_message(chat_id=chat_id, text=message)
         except Exception:
-            # Optionally log in dev
             pass
         finally:
             try:
@@ -159,9 +189,7 @@ def _cancel_run_for_chat(context: ContextTypes.DEFAULT_TYPE, chat_id: int) -> bo
 
 
 def _clear_run_if_finished(context: ContextTypes.DEFAULT_TYPE, chat_id: int) -> None:
-    """
-    Remove finished run record from registry (optional hygiene).
-    """
+    """Remove finished run record from registry (optional hygiene)."""
     runs = _runs(context)
     data = runs.get(chat_id)
     if data and not data["thread"].is_alive():
@@ -350,10 +378,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         username = f"@{user.username}" if user.username else f"ID:{user.id}"
         feedback = f"📩 انتقاد جدید از {username}:\n\n\"{text}\""
 
-        try:
-            await context.bot.send_message(chat_id=ADMIN_CHAT_ID, text=feedback)
-        except Exception as e:
-            print(f"[Feedback] Error sending to admin: {e}")
+        await _notify_admins(context.bot, feedback)
         return
 
     # --- Normal flow ---

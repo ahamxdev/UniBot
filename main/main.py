@@ -39,7 +39,7 @@ def keep_session_alive_loop(session):
     """
     print("\n🛟 Keep-alive thread started.\n")
     while not cancel_event.is_set():
-        # هر ۵ دقیقه:
+
         for _ in range(5 * 60):
             if cancel_event.is_set():
                 break
