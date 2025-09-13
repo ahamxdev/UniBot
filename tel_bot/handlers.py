@@ -372,13 +372,17 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if context.user_data.get("feedback_mode"):
         context.user_data["feedback_mode"] = False
 
-        await update.message.reply_text("🙏 ممنون که نظرت رو گفتی!")
-
         user = update.effective_user
         username = f"@{user.username}" if user.username else f"ID:{user.id}"
         feedback = f"📩 انتقاد جدید از {username}:\n\n\"{text}\""
 
         await _notify_admins(context.bot, feedback)
+
+        # اینجا رو تغییر دادم: تشکر + منوی اصلی
+        await update.message.reply_text(
+            "🙏 ممنون که نظرت رو گفتی!\n\n🏠 منوی اصلی:",
+            reply_markup=get_main_menu_for_user(user.id),
+        )
         return
 
     # --- Normal flow ---
