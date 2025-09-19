@@ -38,6 +38,7 @@ def keep_session_alive_loop(session):
     Runs indefinitely in a daemon thread.
     """
     print("\n🛟 Keep-alive thread started.\n")
+    cancel_event = threading.Event()
     while not cancel_event.is_set():
 
         for _ in range(5 * 60):
