@@ -34,7 +34,7 @@ from tel_bot.keyboard import (
     post_selection_keyboard,
     payment_options_keyboard,
 )
-from tel_bot.config import ADMIN_CHAT_ID
+from tel_bot.config import ADMIN_CHAT_ID, AUTHORIZED_USERS
 from db.models import StudentStatus
 from db.db import SessionLocal
 from main.main import main  # main(stno, term_code, cookie, course_list, chat_id, cancel_event)
@@ -56,6 +56,15 @@ def _is_admin(user_id: int) -> bool:
     if isinstance(ADMIN_CHAT_ID, (list, set, tuple)):
         return user_id in ADMIN_CHAT_ID
     return user_id == ADMIN_CHAT_ID
+
+
+def _is_authorized(user_id: int) -> bool:
+    """
+    Return True if user_id is in AUTHORIZED_USERS (supports single or iterable).
+    """
+    if isinstance(AUTHORIZED_USERS, (list, set, tuple)):
+        return user_id in AUTHORIZED_USERS
+    return user_id == AUTHORIZED_USERS
 
 
 def get_main_menu_for_user(user_id: int):
@@ -207,6 +216,9 @@ def _cancel_keyboard() -> InlineKeyboardMarkup:
 # ---------------------------
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
+    if not _is_authorized(user_id):
+        await update.message.reply_text("⚠️ شما اجازه دسترسی به این بات را ندارید.")
+        return
     if context.user_data.get("agreed_to_terms"):
         await update.message.reply_text(
             "👋 منوی اصلی:", reply_markup=get_main_menu_for_user(user_id)
@@ -237,6 +249,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
 
     user_id = query.from_user.id
+    if not _is_authorized(user_id):
+        await update.message.reply_text("⚠️ شما اجازه دسترسی به این بات را ندارید.")
+        return
     chat_id = query.message.chat.id
     data = query.data
 
@@ -362,6 +377,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
+    if not _is_authorized(user_id):
+        await update.message.reply_text("⚠️ شما اجازه دسترسی به این بات را ندارید.")
+        return
     chat_id = update.effective_chat.id
     text = (update.message.text or "").strip()
 

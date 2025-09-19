@@ -155,14 +155,17 @@ def main(stno, term_code, raw_cookie, course_list, chat_id, cancel_event: thread
                         selected_courses = student_info.get("selected_courses", [])
                         if selected_courses:
                             for i, course in enumerate(selected_courses, start=1):
-                                print(
+                                msg = (
                                     f"{i}. {course['نام درس']} | {course['کد درس']} "
                                     f"| Group: {course['کد گروه']} | Units: {course['واحد']} "
                                     f"| Exam: {course['تاریخ امتحان']} | Fee: {course['شهریه']}"
                                 )
+                                print(msg)  # print to console
+                                message_queue.put_nowait((chat_id, msg))  # also send to Telegram
                         else:
-                            print("⚠️ هیچ درسی انتخاب نشده است.")
-
+                            msg = "⚠️ هیچ درسی انتخاب نشده است."
+                            print(msg)
+                            message_queue.put_nowait((chat_id, msg))
                 else:
                     print(student_info["message"])
 
