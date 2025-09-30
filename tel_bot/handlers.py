@@ -376,6 +376,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    BROADCAST_CONCURRENCY = 8
     user_id = update.effective_user.id
     if not _is_authorized(user_id):
         await update.message.reply_text("⚠️ شما اجازه دسترسی به این بات را ندارید.")
@@ -590,6 +591,102 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
               "طبق آموزش انجام شده در بخش راهنمای بات وارد کنید:",
             reply_markup=back_home_keyboard(),
         )
+        return
+
+# --- Start broadcast flow (admin reply-keyboard button) ---
+    if text == "💬 ارسال پیام همگانی" and user_id in AUTHORIZED_USERS:
+        # enter broadcast mode: next text message from this admin is the broadcast body
+        context.user_data["broadcast_mode"] = True
+        await update.message.reply_text(
+            "✍️ لطفاً متن پیام همگانی را وارد کنید:\n(ارسال به همه‌ی کاربران مجاز)",
+            reply_markup=back_home_keyboard(),
+        )
+        return
+
+# inside handle_message, where you handle broadcast_mode:
+    if context.user_data.get("broadcast_mode"):
+        # only allow authorized admins to actually broadcast
+        if user_id not in AUTHORIZED_USERS:
+            context.user_data.pop("broadcast_mode", None)
+            await update.message.reply_text("❌ شما اجازهٔ ارسال پیام همگانی را ندارید.", reply_markup=get_main_menu_for_user(user_id))
+            return
+
+        # consume the flag
+        context.user_data.pop("broadcast_mode", None)
+
+        # Detect message type and extract payload
+        msg = update.message
+
+        kind = "text"
+        payload = {"text": (msg.text or "").strip()}
+
+        # Photo (pick highest resolution)
+        if msg.photo:
+            kind = "photo"
+            file_id = msg.photo[-1].file_id
+            payload = {"file_id": file_id, "caption": (msg.caption or "").strip()}
+
+        # Video
+        elif msg.video:
+            kind = "video"
+            payload = {"file_id": msg.video.file_id, "caption": (msg.caption or "").strip()}
+
+        # Document (pdf, etc.)
+        elif msg.document:
+            kind = "document"
+            payload = {"file_id": msg.document.file_id, "filename": msg.document.file_name, "caption": (msg.caption or "").strip()}
+
+        # Voice / audio etc. can be added similarly
+
+        # Async sender using semaphore to limit concurrent API calls
+        sem = asyncio.Semaphore(BROADCAST_CONCURRENCY)
+
+        async def _send_one(recipient_id: int) -> tuple[int, bool, str]:
+            """
+            Send payload to recipient_id.
+            Returns tuple(recipient_id, success_bool, error_message_or_empty).
+            """
+            try:
+                async with sem:
+                    if kind == "text":
+                        await context.bot.send_message(chat_id=recipient_id, text=payload["text"])
+                    elif kind == "photo":
+                        await context.bot.send_photo(chat_id=recipient_id, photo=payload["file_id"], caption=payload.get("caption") or None)
+                    elif kind == "video":
+                        await context.bot.send_video(chat_id=recipient_id, video=payload["file_id"], caption=payload.get("caption") or None)
+                    elif kind == "document":
+                        await context.bot.send_document(chat_id=recipient_id, document=payload["file_id"], caption=payload.get("caption") or None)
+                    else:
+                        # fallback to text
+                        await context.bot.send_message(chat_id=recipient_id, text=payload.get("text",""))
+                return (recipient_id, True, "")
+            except Exception as e:
+                # return error to report back to admin; do not raise
+                return (recipient_id, False, str(e))
+
+        # Launch tasks for all recipients and wait
+        recipients = list(AUTHORIZED_USERS)  # or your target list of users
+        tasks = [_send_one(uid) for uid in recipients]
+        results = await asyncio.gather(*tasks)
+
+        # Process results
+        failures = [(rid, err) for (rid, ok, err) in results if not ok]
+        success_count = sum(1 for (_, ok, _) in results if ok)
+        fail_count = len(failures)
+
+        # Report back to admin
+        if fail_count == 0:
+            await update.message.reply_text(
+                f"✅ پیام همگانی با موفقیت برای {success_count} کاربر ارسال شد.\n\n🏠 منوی اصلی:",
+                reply_markup=admin_menu_keyboard() if user_id in AUTHORIZED_USERS else get_main_menu_for_user(user_id),
+            )
+        else:
+            # include a short sample of failed recipients
+            sample = ", ".join(str(rid) for rid, _ in failures[:8])
+            await update.message.reply_text(
+                f"⚠️ ارسال برای {success_count} کاربر موفق بود، ولی {fail_count} ارسال ناموفق داشت.\nنمونه خطاها: {sample}\n\n🏠 منوی اصلی:",
+                reply_markup=admin_menu_keyboard() if user_id in AUTHORIZED_USERS else get_main_menu_for_user(user_id),
+            )
         return
 
     if context.user_data.get("awaiting_cookie"):
