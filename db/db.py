@@ -11,11 +11,11 @@ load_dotenv()
 
 
 # Database configuration from environment or defaults
-DB_USER = os.getenv("DB_USER", "unibot_user")
-DB_PASS = os.getenv("DB_PASS", "UniBot13579adgJL")
-DB_NAME = os.getenv("DB_NAME", "unibot_db")
-DB_HOST = os.getenv("DB_HOST", "localhost")
-DB_PORT = os.getenv("DB_PORT", "5432")
+DB_USER = os.getenv("DB_USER")
+DB_PASS = os.getenv("DB_PASS")
+DB_NAME = os.getenv("DB_NAME")
+DB_HOST = os.getenv("DB_HOST")
+DB_PORT = os.getenv("DB_PORT")
 
 # URL-encode password to safely include in connection string
 DB_PASS_ENCODED = quote_plus(DB_PASS)
