@@ -105,7 +105,7 @@ UniBot/
      DB_PORT=5432
      DB_NAME=unibot_db
      DB_USER=unibot_user
-     DB_PASSWORD=***
+     DB_PASS=***
      ```
 
 5. **Set up the PostgreSQL database:**
