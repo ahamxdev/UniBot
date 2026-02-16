@@ -32,20 +32,19 @@ from db.save_to_db import save_student_info
 from tel_bot.message_queue import message_queue
 
 
-def keep_session_alive_loop(session):
+def keep_session_alive_loop(session, stop_event: threading.Event):
     """
     Background loop to keep the HTTP session alive by sending periodic pings.
     Runs indefinitely in a daemon thread.
     """
     print("\n🛟 Keep-alive thread started.\n")
-    cancel_event = threading.Event()
-    while not cancel_event.is_set():
+    while not stop_event.is_set():
 
         for _ in range(5 * 60):
-            if cancel_event.is_set():
+            if stop_event.is_set():
                 break
             time.sleep(1)
-        if cancel_event.is_set():
+        if stop_event.is_set():
             break
         try:
             send_keep_alive_ping(session)
@@ -54,7 +53,15 @@ def keep_session_alive_loop(session):
     print("🛟 Keep-alive thread exiting.")
 
 
-def main(stno, term_code, raw_cookie, course_list, chat_id, cancel_event: threading.Event):
+def main(
+    stno,
+    term_code,
+    raw_cookie,
+    course_list,
+    chat_id,
+    message_prefix: str,
+    cancel_event: threading.Event,
+):
     """
     Main loop for processing unit selection requests.
 
@@ -71,6 +78,7 @@ def main(stno, term_code, raw_cookie, course_list, chat_id, cancel_event: thread
                 "done": bool
             }
         chat_id (int): Telegram chat ID to send messages to (via queue)
+        message_prefix (str): Optional prefix prepended to every outbound message
 
     Behavior:
         - Submits requests in rounds.
@@ -87,9 +95,12 @@ def main(stno, term_code, raw_cookie, course_list, chat_id, cancel_event: thread
     # Create authenticated session
     session = create_session(raw_cookie)
 
+    # Separate stop signal for keep-alive thread (do NOT reuse cancel_event)
+    stop_event = threading.Event()
+
     # Start keep-alive thread
     threading.Thread(
-        target=keep_session_alive_loop, args=(session,), daemon=True
+        target=keep_session_alive_loop, args=(session, stop_event), daemon=True
     ).start()
 
     print("\n🔄 Starting submission loop...\n")
@@ -137,7 +148,7 @@ def main(stno, term_code, raw_cookie, course_list, chat_id, cancel_event: thread
 
                 # Push message to queue for Telegram bot
                 if result["status_code"] != "capacity_full":
-                    message_queue.put_nowait((chat_id, result["message"]))
+                    message_queue.put_nowait((chat_id, f"{message_prefix}{result['message']}"))
 
                 # Extract and save student info
                 student_info = extract_data(html)
@@ -162,11 +173,11 @@ def main(stno, term_code, raw_cookie, course_list, chat_id, cancel_event: thread
                                     f"| Exam: {course['تاریخ امتحان']} | Fee: {course['شهریه']}"
                                 )
                                 print(msg)  # print to console
-                                message_queue.put_nowait((chat_id, msg))  # also send to Telegram
+                                message_queue.put_nowait((chat_id, f"{message_prefix}{msg}"))  # also send to Telegram
                         else:
                             msg = "⚠️ هیچ درسی انتخاب نشده است."
                             print(msg)
-                            message_queue.put_nowait((chat_id, msg))
+                            message_queue.put_nowait((chat_id, f"{message_prefix}{msg}"))
                 else:
                     print(student_info["message"])
 
@@ -182,7 +193,7 @@ def main(stno, term_code, raw_cookie, course_list, chat_id, cancel_event: thread
                 )
                 print(error_msg)
                 try:
-                    message_queue.put_nowait((chat_id, error_msg))
+                    message_queue.put_nowait((chat_id, f"{message_prefix}{error_msg}"))
                 except Exception:
                     pass
 
@@ -201,8 +212,17 @@ def main(stno, term_code, raw_cookie, course_list, chat_id, cancel_event: thread
                 break
             time.sleep(1)
 
-    if cancel_event.is_set():
-        try:
-            message_queue.put_nowait((chat_id, "⛔️ عملیات به درخواست شما متوقف شد."))
-        except Exception:
-            pass
+    canceled = cancel_event.is_set()
+
+    # ensure keep-alive thread stops when work is done
+    stop_event.set()
+
+    if canceled:
+        final_msg = "⛔️ عملیات به درخواست شما متوقف شد."
+    else:
+        final_msg = "✅ عملیات با موفقیت به پایان رسید."
+
+    try:
+        message_queue.put_nowait((chat_id, f"{message_prefix}{final_msg}"))
+    except Exception:
+        pass

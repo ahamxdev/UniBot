@@ -1,10 +1,6 @@
 from sqlalchemy.orm import Session
 from db.models import StudentInfo, StudentStatus, PaymentStatusEnum
-from db.db import SessionLocal, init_db
-
-
-# Initialize database (e.g. create tables if they don't exist)
-init_db()
+from db.db import SessionLocal
 
 
 def save_student_info(student_data: dict, session: Session = None) -> StudentInfo:

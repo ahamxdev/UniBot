@@ -1,8 +1,7 @@
 import os
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import declarative_base, sessionmaker
 from urllib.parse import quote_plus
 
 
@@ -16,6 +15,21 @@ DB_PASS = os.getenv("DB_PASS")
 DB_NAME = os.getenv("DB_NAME")
 DB_HOST = os.getenv("DB_HOST")
 DB_PORT = os.getenv("DB_PORT")
+
+# Validate required configuration early
+_missing = [
+    name
+    for name, value in [
+        ("DB_USER", DB_USER),
+        ("DB_PASS", DB_PASS),
+        ("DB_NAME", DB_NAME),
+        ("DB_HOST", DB_HOST),
+        ("DB_PORT", DB_PORT),
+    ]
+    if not value
+]
+if _missing:
+    raise RuntimeError(f"Missing database environment variables: {', '.join(_missing)}")
 
 # URL-encode password to safely include in connection string
 DB_PASS_ENCODED = quote_plus(DB_PASS)
@@ -40,12 +54,13 @@ SessionLocal = sessionmaker(
 
 # Base class for all ORM models
 Base = declarative_base()
-Base.metadata.drop_all(bind=engine)
 
 def init_db():
     """
     Initializes the database by creating all tables 
     defined in models if they do not already exist.
     """
+    # Ensure models are imported so they are registered on Base.metadata
+    from db import models  # noqa: F401
     Base.metadata.create_all(bind=engine)
     # Base.metadata.drop_all(bind=engine)

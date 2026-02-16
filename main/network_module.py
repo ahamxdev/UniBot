@@ -53,6 +53,8 @@ def create_session(raw_cookie: str) -> requests.Session:
     """
 
     session = requests.Session()
+    # Ensure requests never uses env proxy variables (we want Sama traffic to go direct)
+    session.trust_env = False
 
     # Parse raw cookie
     cookies = {}

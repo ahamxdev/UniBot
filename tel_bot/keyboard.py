@@ -4,9 +4,8 @@ from telegram import ReplyKeyboardMarkup
 def admin_menu_keyboard():
     return ReplyKeyboardMarkup(
         keyboard=[
-            ["👨‍🎓 اطلاعات دانشجویی"],
-            ["📚 انتخاب واحد"],
-            ["💳 مالی"],
+            ["➕ افزودن دانشجو"],
+            ["📚 انتخاب واحد", "📋 عملیات در حال انجام"],
             ["📖 راهنمای بات"],
             ["💬 ارسال پیام همگانی"],
             ["🛠 مدیریت بات"]
@@ -19,9 +18,7 @@ def admin_menu_keyboard():
 def main_menu_keyboard():
     return ReplyKeyboardMarkup(
         keyboard=[
-            ["👨‍🎓 اطلاعات دانشجویی"],
             ["📚 انتخاب واحد"],
-            ["💳 خرید اشتراک"],
             ["📖 راهنمای بات"],
             ["💬 گزارش و انتقادات"]
         ],
@@ -45,24 +42,3 @@ def post_selection_keyboard():
         resize_keyboard=True
     )
 
-
-def payment_options_keyboard():
-    return ReplyKeyboardMarkup(
-        keyboard=[
-            ["🎟 اعمال کد تخفیف"],
-            ["💰 پرداخت"],
-            ["❌ انصراف"]
-        ],
-        resize_keyboard=True
-    )
-
-
-# def payment_options_keyboard():
-#     return ReplyKeyboardMarkup(
-#         keyboard=[
-#             ["🎟 تخصیص کد تخفیف"],
-#             ["💰 تعداد پرداخت ها"],
-#             ["❌ انصراف"]
-#         ],
-#         resize_keyboard=True
-#     )

@@ -12,6 +12,7 @@ This module:
 from __future__ import annotations
 
 import logging
+import os
 from telegram.ext import (
     Application,
     CommandHandler,
@@ -21,6 +22,7 @@ from telegram.ext import (
 )
 
 from tel_bot.config import TOKEN as BOT_TOKEN
+from db.db import init_db
 from tel_bot.handlers import (
     start,
     handle_message,
@@ -57,12 +59,18 @@ def build_application() -> Application:
     if not BOT_TOKEN:
         raise RuntimeError("BOT_TOKEN is missing. Check tel_bot.config.TOKEN")
 
-    app = (
+    builder = (
         Application.builder()
         .token(BOT_TOKEN)
         .post_init(_post_init)  # ← important: start queue workers when loop is alive
-        .build()
     )
+
+    proxy_url = os.getenv("TELEGRAM_PROXY_URL")
+    if proxy_url:
+        # Telegram traffic via SOCKS/HTTP proxy; non-Telegram traffic remains direct.
+        builder = builder.proxy(proxy_url).get_updates_proxy(proxy_url)
+
+    app = builder.build()
 
     # Register handlers
     app.add_handler(CommandHandler("start", start))
@@ -75,6 +83,7 @@ def build_application() -> Application:
 def main() -> None:
     """Program entry point. Builds the app and starts polling."""
     configure_logging()
+    init_db()
     app = build_application()
     logging.info("🤖 The robot is on!")
     app.run_polling(close_loop=False)

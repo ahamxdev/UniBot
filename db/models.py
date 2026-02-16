@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Enum
+from sqlalchemy import Column, Integer, String, ForeignKey, Enum, Boolean
 from sqlalchemy.orm import relationship
 from db.db import Base
 import enum
@@ -81,3 +81,18 @@ class StudentStatus(Base):
         back_populates="status_info",
         uselist=False
     )
+
+
+class StudentAccess(Base):
+    """
+    ORM model for the 'students_access' table.
+    Stores per-user access + unit selection limits configured by admins.
+    """
+
+    __tablename__ = "students_access"
+
+    id = Column(Integer, primary_key=True, index=True)
+    telegram_user_id = Column(String, unique=True, index=True, nullable=False)
+    student_number = Column(String, nullable=False)
+    max_courses = Column(Integer, nullable=False, default=0)
+    is_active = Column(Boolean, nullable=False, default=True)
