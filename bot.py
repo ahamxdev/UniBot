@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import logging
 import os
+import httpx
 from telegram.ext import (
     Application,
     CommandHandler,
@@ -68,7 +69,21 @@ def build_application() -> Application:
     proxy_url = os.getenv("TELEGRAM_PROXY_URL")
     if proxy_url:
         # Telegram traffic via SOCKS/HTTP proxy; non-Telegram traffic remains direct.
-        builder = builder.proxy(proxy_url).get_updates_proxy(proxy_url)
+        proxy_username = os.getenv("TELEGRAM_PROXY_USERNAME")
+        proxy_password = os.getenv("TELEGRAM_PROXY_PASSWORD")
+
+        if (proxy_username and not proxy_password) or (proxy_password and not proxy_username):
+            raise RuntimeError(
+                "Both TELEGRAM_PROXY_USERNAME and TELEGRAM_PROXY_PASSWORD must be set when using Telegram proxy auth."
+            )
+
+        proxy = (
+            httpx.Proxy(proxy_url, auth=(proxy_username, proxy_password))
+            if proxy_username and proxy_password
+            else httpx.Proxy(proxy_url)
+        )
+
+        builder = builder.proxy(proxy).get_updates_proxy(proxy)
 
     app = builder.build()
 
