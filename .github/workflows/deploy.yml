@@ -1,43 +1,57 @@
-name: Deploy on Merge to Main
+name: Deploy on Push to Main
 
 on:
   push:
-    branches:
-      - main
+    branches: [ "main" ]
+
+concurrency:
+  group: unibot-deploy
+  cancel-in-progress: true
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
       - name: Deploy to server via SSH
         uses: appleboy/ssh-action@v1.0.0
         with:
-          host: 62.60.245.182
-          username: root
+          host: ${{ secrets.UNIBOT_HOST }}
+          username: unibot
           key: ${{ secrets.UNIBOT_DEPLOY_KEY }}
           port: 22
           script: |
-            set -e
+            set -euo pipefail
 
-            echo "[1] 🔻 Stop bot service"
-            systemctl stop UniBot
+            APP_DIR="/opt/UniBot"
+            BRANCH="main"
+            SERVICE="UniBot.service"
 
-            echo "[2] 📂 Go to project folder"
-            cd /root/UniBot
+            echo "==> [0] Who am I?"
+            whoami
+            hostname
+            date -Is
 
-            echo "[3] 💢 Reset hard & pull latest changes"
-            git fetch origin
-            git reset --hard origin/main
+            echo "==> [1] Go to project folder"
+            cd "$APP_DIR"
 
-            echo "[4] 🐍 Activate virtualenv and install requirements"
-            source venv/bin/activate
-            pip install --upgrade pip
-            pip install -r requirements.txt
-            deactivate
+            echo "==> [2] Update source (fetch + hard reset + clean)"
+            git fetch --prune origin
+            git reset --hard "origin/$BRANCH"
+            git clean -fd
 
-            echo "[5] 🚀 Start bot service"
-            systemctl start UniBot
+            echo "==> [3] Ensure venv exists"
+            if [ ! -x "$APP_DIR/venv/bin/python" ]; then
+              python3 -m venv "$APP_DIR/venv"
+            fi
+
+            echo "==> [4] Install dependencies"
+            "$APP_DIR/venv/bin/pip" install -U pip wheel
+            if [ -f "$APP_DIR/requirements.txt" ]; then
+              "$APP_DIR/venv/bin/pip" install -r "$APP_DIR/requirements.txt"
+            fi
+
+            echo "==> [5] Restart service"
+            sudo /usr/bin/systemctl restart "$SERVICE"
+
+            echo "==> [6] Status"
+            sudo /usr/bin/systemctl --no-pager -l status "$SERVICE"
